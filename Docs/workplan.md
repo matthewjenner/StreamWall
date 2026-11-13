@@ -21,7 +21,7 @@ Stop for review after each phase.
 | ----- | --------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | M0    | Docs and repo prep: CLAUDE.md, DESIGN, TECHARCH, workplan, README, license, gitleaks (secrets + URL guard), CI              | Done        |
 | M1    | Spike: check every TECHARCH "WebView2 requirement" with `NativeWebView`; video-only on a local test page; 12 cells measured | Done        |
-| M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Not started |
+| M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Done        |
 | M3    | One cell: shared environment, sign-in window, video-only and audio scripts, control panel stream list (masked), demo site   | Not started |
 | M4    | The grid: N x M walls, monitors, presets, cell strips, expand, drag-to-swap, global hotkeys, 12-cell measurement            | Not started |
 | M5    | Resilience: signed-out detection + single prompt, stall watchdog, crash recovery, staggered loading, throttling verified    | Not started |
@@ -124,6 +124,27 @@ With streams configured in the app by the user:
   WPF assembly, producing MSB3277 (WindowsBase conflict); strip that reference
   in the real projects so warnings-as-errors stays clean.
 
+### Scaffold (M2)
+
+- Solution `StreamWall.slnx`: Core (pure), Platform (DPAPI config store, log
+  file, paths), App (AppHost composition root, control-panel shell), and three
+  test projects. 76 tests, zero build warnings, Debug and Release.
+- Conventions ported from RingView: ASCII, US English (word list verbatim, no
+  vendor exceptions yet), Core purity. New: `UrlAllowlistConventionTests`,
+  which reads the gitleaks URL rule and its allowlist from `.gitleaks.toml`.
+- The config is one DPAPI-encrypted JSON document. A file that cannot be
+  decrypted (another Windows account) or parsed is moved to
+  `config.dat.unreadable-<stamp>`, never overwritten, and the app starts empty.
+  Every load and save re-registers every configured URL with the redactor
+  before anything can log it.
+- Found while testing: the generic `key=value` rule ran before the Bearer rule
+  and left the token in `Authorization: Bearer <token>`; token shapes now run
+  first, and cookie headers lose their whole value. The gitleaks URL rule
+  treated `user:pass@` as the host; it now skips userinfo and checks the real
+  host.
+- Deferred to where they are used: the WebView2 package (and stripping its
+  WPF reference) to M3; Velopack, single instance and the icon to M6.
+
 ### Open questions
 
 - Global hotkeys: Win32 `RegisterHotKey` (enough for a few fixed hotkeys, no
@@ -134,6 +155,12 @@ With streams configured in the app by the user:
   repo's releases), or only build locally with `Scripts/pack.sh`? Decide by M6.
 
 ### Decisions log
+
+- **2026-11-13** - Logs never name streams by label (users can type anything
+  into a label); cell index and stream pseudonym only. The redactor also hides
+  each configured host's distinctive labels (the site's name) in any case, and
+  leaves generic labels (`live`, `www`, `cdn`, ...) readable.
+- **2026-11-13** - Version stays 0.0.0 (never released) until v0.1.0 is ready.
 
 - **2026-11-13** - Web views are hosted by Avalonia's `NativeWebView` and
   driven through the official WebView2 SDK wrapped around its COM pointer

@@ -16,9 +16,10 @@ It is **.NET 10 + Avalonia 12**, following Klakr's layout and the standards of
 Updatr and RingView (the newest local apps), released with Velopack from this
 **public** repo. `Docs/workplan.md` has the phases and decisions.
 
-Status: **pre-code.** M0 (docs, license, gitleaks, CI) is done; nothing below
-`Src/` exists yet. Layout and commands describe the target and are updated as each phase
-lands.
+Status: **M2 (scaffold) done.** Core, Platform and App build with zero
+warnings; the App is a control-panel shell. Web views, walls and the demo
+site arrive in M3/M4 (see `Docs/workplan.md`). The M1 spike lives in
+`Spikes/StreamWall.WebViewSpike`.
 
 ## Privacy (non-negotiable)
 
@@ -43,40 +44,45 @@ published".
 - Diagnostics go through typed `DiagLog` methods, which redact; no free-form
   log strings elsewhere. A URL-shaped string reaching a log is a bug.
 
-## Commands (target, from M2)
+## Commands
 
 ```bash
 dotnet build StreamWall.slnx
 dotnet test --solution StreamWall.slnx    # MTP runner (global.json); conventions, unit, headless UI
 dotnet run --project Src/StreamWall.App   # the real app, your config
-dotnet run --project Src/StreamWall.App -- --demo                        # local demo site, no account
-dotnet run --project Src/StreamWall.App -- --demo --screenshot <folder>  # PNGs of the main screens
+dotnet run --project Src/StreamWall.App -- --demo   # memory-only config and log, placeholder streams
 ./Scripts/run.sh [Debug|Release] [app args]     # clean, build, run
-./Scripts/pack.sh [folder]                      # local Velopack installer (needs vpk) -> artifacts/
 ./Scripts/bump-version.sh [Major|Minor|Patch]   # edits Directory.Build.props only
+./Spikes/gen-media.sh                           # the spike's synthetic clip (needs ffmpeg)
 ```
+
+Coming later: `--demo` serving the local demo site and `--screenshot <folder>`
+(M3), `./Scripts/pack.sh` (M6).
 
 Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
 (runs gitleaks on staged changes: secrets, plus any URL whose host is not on the
 `.gitleaks.toml` allowlist; CI scans the full history).
 
-## Layout (target)
+## Layout
 
 ```
-Src/StreamWall.Core/       Pure logic: config model + rules, walls/grids/presets, LogRedactor,
-                           Pseudonymizer, DiagLog, StallWatchdog, SignedOutDetector,
-                           StartupStagger, UpdateService (over an IUpdater seam), and
-                           Presentation (CellDisplay: the strip's visual rules as data).
+Src/StreamWall.Core/       Pure logic. Now: Config (AppConfig, ConfigRules, ConfigDocument,
+                           ConfigRepository + IConfigStore), Diagnostics (DiagLog, LogRedactor,
+                           Pseudonymizer), Presentation (UrlMask). Later: walls/presets,
+                           StallWatchdog, SignedOutDetector, StartupStagger, CellDisplay.
                            net10.0, no packages, no P/Invoke (CorePurityConventionTests).
-Src/StreamWall.Platform/   Windows services: DPAPI config vault, AppPaths, log file, profile
-                           hygiene (selective data clearing), SingleInstance, VelopackUpdater.
-Src/StreamWall.App/        Avalonia app -> StreamWall.exe: AppHost (composition root, demo
-                           mode), WebView host + injected scripts, walls, cell strips, sign-in
-                           window, control panel, tray, screenshot mode, demo site.
-Tests/StreamWall.Core.Tests/     Unit, state-machine (fake time) and convention tests.
-Tests/StreamWall.Platform.Tests/ Vault round-trip (real DPAPI), log file, temp folders.
-Tests/StreamWall.App.Tests/      Headless UI tests of the control panel (UiHarness pattern).
-Scripts/                   run, pack, bump-version, gen-icons.
+Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, atomic, sets an
+                           unreadable file aside), FileDiagSink, AppPaths. Later: profile
+                           hygiene, SingleInstance, VelopackUpdater.
+Src/StreamWall.App/        Avalonia app -> StreamWall.exe. Now: AppHost (composition root, real
+                           or --demo with memory stores), the control-panel shell. Later: web view
+                           host + injected scripts, walls, strips, sign-in window, tray, demo site.
+Tests/StreamWall.Core.Tests/     Conventions (ASCII, US English, Core purity, URL allowlist),
+                                 redaction, pseudonyms, config rules/document/repository.
+Tests/StreamWall.Platform.Tests/ Real DPAPI round-trip and quarantine, log file, paths (temp folders).
+Tests/StreamWall.App.Tests/      Headless UI tests on the demo host (UiHarness; not Avalonia.Headless.XUnit).
+Spikes/                    Throwaway proofs, outside the solution and central packages.
+Scripts/                   run, bump-version (pack, gen-icons in M6).
 Directory.Build.props      Version + shared Windows TFM.
 Directory.Packages.props   Central package versions (check nuget.org before adding/bumping).
 ```
@@ -87,9 +93,15 @@ Directory.Packages.props   Central package versions (check nuget.org before addi
   `AsciiConventionTests` / `UsEnglishConventionTests`. Build non-ASCII data
   (the masking dot, status dots) from char codes.
 - **No real hosts in the tree**, enforced by gitleaks' `non-placeholder-url`
-  rule (pre-commit and CI) and, from M2, `UrlAllowlistConventionTests`: any
-  URL whose host is not on the allowlist (`example.invalid`, `*.example`, and
-  named build/docs hosts) fails.
+  rule (pre-commit and CI) and `UrlAllowlistConventionTests`, which reads the
+  same rule and allowlist from `.gitleaks.toml` (one source of truth): any URL
+  whose host is not on the allowlist (`example.invalid`, `*.example`, and
+  named build/docs hosts) fails. `gitleaks dir` also scans ignored build output
+  (`bin/`, `obj/`, the generated clip); the git scans that matter do not.
+- **Redaction order matters.** `LogRedactor` replaces URLs, then registered
+  terms, then token shapes (JWT, Bearer, cookie headers) before generic
+  `key=value`; the reverse leaks `Authorization: Bearer <token>`. Add a test
+  case for any new shape.
 - **Update `Docs/` in the same change** as the code it describes.
 - **Core is pure and clock-free.** State machines take an injected
   `TimeProvider`; tests drive them with `FakeTimeProvider`.

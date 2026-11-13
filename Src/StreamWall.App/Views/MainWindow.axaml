@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StreamWall.App.ViewModels"
+        x:Class="StreamWall.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Width="900" Height="600" MinWidth="640" MinHeight="400"
+        WindowStartupLocation="CenterScreen">
+    <!-- The control panel shell (M2). Streams, site settings, walls and presets arrive in M3/M4. -->
+    <DockPanel Margin="24">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="StreamWall" FontSize="24" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Version}" VerticalAlignment="Bottom" Opacity="0.6" Margin="0,0,0,4" />
+        </StackPanel>
+        <TextBlock Name="StatusText" Text="{Binding Status}" Margin="0,16,0,0" />
+    </DockPanel>
+</Window>

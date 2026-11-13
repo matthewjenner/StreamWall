@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Avalonia app -> StreamWall.exe. Views and view models only; behavior lives in Core. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>$(StreamWallWindowsTfm)</TargetFramework>
+    <SupportedOSPlatformVersion>$(StreamWallMinWindows)</SupportedOSPlatformVersion>
+    <AssemblyName>StreamWall</AssemblyName>
+    <RootNamespace>StreamWall.App</RootNamespace>
+    <!-- Required: without the supported-OS list, Avalonia cannot host native web views (M1). -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="StreamWall.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The license ships in the install folder. -->
+    <None Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StreamWall.Core\StreamWall.Core.csproj" />
+    <ProjectReference Include="..\StreamWall.Platform\StreamWall.Platform.csproj" />
+  </ItemGroup>
+</Project>

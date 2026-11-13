@@ -4,7 +4,17 @@ An always-on Windows video wall for web video streams that need a sign-in:
 many streams tiled across one or more borderless windows, each cell showing
 only its video, all playing audio at once.
 
-> **Status: in design.** Nothing is built yet. See [Docs/workplan.md](Docs/workplan.md).
+> **Status: early development.** The project skeleton is in place; the wall itself is not built
+> yet. See [Docs/workplan.md](Docs/workplan.md).
+
+## Develop
+
+```bash
+dotnet build StreamWall.slnx
+dotnet test --solution StreamWall.slnx
+dotnet run --project Src/StreamWall.App -- --demo   # placeholder streams, nothing written to disk
+git config core.hooksPath .githooks                 # once: gitleaks pre-commit scan
+```
 
 ## How it works
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Windows services for the app: the DPAPI config store, the log file and data paths. Implements
+    Core's IConfigStore and IDiagSink. Single instance and the updater join in M6.
+  -->
+  <PropertyGroup>
+    <TargetFramework>$(StreamWallWindowsTfm)</TargetFramework>
+    <SupportedOSPlatformVersion>$(StreamWallMinWindows)</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StreamWall.Core\StreamWall.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="StreamWall.Platform.Tests" />
+  </ItemGroup>
+</Project>

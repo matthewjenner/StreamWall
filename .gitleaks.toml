@@ -11,7 +11,7 @@ useDefault = true
 [[rules]]
 id = "non-placeholder-url"
 description = "URL whose host is not on the StreamWall allowlist (use https://*.example.invalid/ placeholders)"
-regex = '''(?i)\b(?:https?|wss?)://([a-z0-9][a-z0-9.-]*)'''
+regex = '''(?i)\b(?:https?|wss?)://(?:[^\s/@"'<>]+@)?([a-z0-9][a-z0-9.-]*)'''
 secretGroup = 1
 keywords = ["http", "ws"]
 
@@ -32,8 +32,17 @@ keywords = ["http", "ws"]
     '''(?i)^(.+\.)?w3\.org$''',
   ]
 
-[allowlist]
+[[allowlists]]
 description = "The config itself names the allowed hosts"
 paths = [
   '''\.gitleaks\.toml$''',
+]
+
+# The redactor's tests deliberately contain a fake JWT to prove it is masked. Only the jwt rule
+# is skipped there; the URL rule still applies to that file.
+[[allowlists]]
+description = "Redaction test fixtures"
+targetRules = ["jwt"]
+paths = [
+  '''Tests/StreamWall\.Core\.Tests/LogRedactorTests\.cs$''',
 ]

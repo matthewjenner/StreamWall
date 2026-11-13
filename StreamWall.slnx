@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Src/">
+    <Project Path="Src/StreamWall.Core/StreamWall.Core.csproj" />
+    <Project Path="Src/StreamWall.Platform/StreamWall.Platform.csproj" />
+    <Project Path="Src/StreamWall.App/StreamWall.App.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/StreamWall.Core.Tests/StreamWall.Core.Tests.csproj" />
+    <Project Path="Tests/StreamWall.Platform.Tests/StreamWall.Platform.Tests.csproj" />
+    <Project Path="Tests/StreamWall.App.Tests/StreamWall.App.Tests.csproj" />
+  </Folder>
+</Solution>

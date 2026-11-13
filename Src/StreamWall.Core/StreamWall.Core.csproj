@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pure logic: config model and rules, redaction and pseudonyms, the typed DiagLog, and (from M3)
+       the cell state machines. No UI, no P/Invoke, no file paths, no network. See CLAUDE.md. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>
