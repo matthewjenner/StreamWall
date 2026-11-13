@@ -31,6 +31,10 @@ regularly; your signed-in session is kept. No telemetry.
 
 - DRM-protected (Widevine) streams may not play in WebView2.
 
+## License
+
+[MIT](LICENSE). Personal-use project; not distributed.
+
 ## Docs
 
 [DESIGN](Docs/DESIGN.md) - [TECHARCH](Docs/TECHARCH.md) - [workplan](Docs/workplan.md)

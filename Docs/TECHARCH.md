@@ -128,9 +128,12 @@ Embedded resources in `StreamWall.App`, plain JavaScript, idempotent:
   URL-shaped strings, host-shaped strings and registered values (every
   configured URL and host) with pseudonyms or `[redacted]`. Unit tests feed it
   placeholder URLs in many shapes.
-- **Repo guards:** `UrlAllowlistConventionTests` (no non-allowlisted host in any
-  tracked file), gitleaks pre-commit (`.githooks`) and in CI over the full
-  history, `.gitignore` for app data, WebView2 profiles and build output.
+- **Repo guards:** gitleaks pre-commit (`.githooks`) and in CI over the full
+  history, with the default secret rules plus `non-placeholder-url`, which
+  fails on any URL whose host is not on the allowlist in `.gitleaks.toml`
+  (placeholders, localhost, and named build/docs hosts). From M2,
+  `UrlAllowlistConventionTests` applies the same allowlist in `dotnet test`.
+  `.gitignore` covers app data, WebView2 profiles and build output.
 
 ## Demo mode
 

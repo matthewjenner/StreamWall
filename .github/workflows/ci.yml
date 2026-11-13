@@ -1,0 +1,44 @@
+name: CI
+
+# Quality gate on every push and PR: gitleaks over the full history (secrets, plus the
+# non-placeholder-url rule that keeps the site out of the repo), and the .NET build + tests.
+# The .NET job runs once the solution exists (M2); until then it reports that it was skipped.
+# The release pipeline (release.yml, M6) is separate and only ships on version bumps.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history so gitleaks can scan all commits
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  dotnet:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check for the solution
+        id: sln
+        shell: bash
+        run: |
+          if [ -f StreamWall.slnx ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "StreamWall.slnx not scaffolded yet (M2); skipping build and tests."; fi
+      - uses: actions/setup-dotnet@v6
+        if: steps.sln.outputs.present == 'true'
+        with:
+          global-json-file: global.json
+      - run: dotnet test --solution StreamWall.slnx --configuration Release
+        if: steps.sln.outputs.present == 'true'

@@ -1,0 +1,39 @@
+# gitleaks configuration for StreamWall.
+#
+# Runs as a pre-commit hook (.githooks/pre-commit) and in CI (ci.yml) over the full history.
+# Extends the bundled default ruleset, and adds a URL guard: StreamWall's site, stream URLs
+# and hosts are private and must never be committed, so any URL whose host is not on the
+# allowlist below fails the scan. Placeholders use example.invalid.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "non-placeholder-url"
+description = "URL whose host is not on the StreamWall allowlist (use https://*.example.invalid/ placeholders)"
+regex = '''(?i)\b(?:https?|wss?)://([a-z0-9][a-z0-9.-]*)'''
+secretGroup = 1
+keywords = ["http", "ws"]
+
+  [[rules.allowlists]]
+  description = "Placeholder, local and build/docs hosts"
+  regexTarget = "secret"
+  regexes = [
+    '''(?i)^(.+\.)?example(\.invalid|\.com|\.org|\.net)?$''',
+    '''(?i)^(.+\.)?invalid$''',
+    '''(?i)^localhost$''',
+    '''(?i)^127\.0\.0\.1$''',
+    '''(?i)^(.+\.)?github\.com$''',
+    '''(?i)^(.+\.)?githubusercontent\.com$''',
+    '''(?i)^(.+\.)?nuget\.org$''',
+    '''(?i)^(.+\.)?microsoft\.com$''',
+    '''(?i)^(.+\.)?avaloniaui\.net$''',
+    '''(?i)^(.+\.)?velopack\.io$''',
+    '''(?i)^(.+\.)?w3\.org$''',
+  ]
+
+[allowlist]
+description = "The config itself names the allowed hosts"
+paths = [
+  '''\.gitleaks\.toml$''',
+]

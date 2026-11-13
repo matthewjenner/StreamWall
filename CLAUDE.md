@@ -16,8 +16,8 @@ It is **.NET 10 + Avalonia 12**, following Klakr's layout and the standards of
 Updatr and RingView (the newest local apps), released with Velopack from this
 **public** repo. `Docs/workplan.md` has the phases and decisions.
 
-Status: **pre-code.** M0 (docs) is in progress; nothing below `Src/` exists
-yet. Layout and commands describe the target and are updated as each phase
+Status: **pre-code.** M0 (docs, license, gitleaks, CI) is done; nothing below
+`Src/` exists yet. Layout and commands describe the target and are updated as each phase
 lands.
 
 ## Privacy (non-negotiable)
@@ -56,8 +56,9 @@ dotnet run --project Src/StreamWall.App -- --demo --screenshot <folder>  # PNGs 
 ./Scripts/bump-version.sh [Major|Minor|Patch]   # edits Directory.Build.props only
 ```
 
-Enable the pre-commit secret scan once per clone: `git config core.hooksPath .githooks`
-(runs gitleaks on staged changes; CI scans the full history).
+Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
+(runs gitleaks on staged changes: secrets, plus any URL whose host is not on the
+`.gitleaks.toml` allowlist; CI scans the full history).
 
 ## Layout (target)
 
@@ -85,9 +86,10 @@ Directory.Packages.props   Central package versions (check nuget.org before addi
 - **ASCII and US English** everywhere authored, enforced by
   `AsciiConventionTests` / `UsEnglishConventionTests`. Build non-ASCII data
   (the masking dot, status dots) from char codes.
-- **No real hosts in the tree**, enforced by `UrlAllowlistConventionTests`:
-  any URL whose host is not on the allowlist (`example.invalid`, `*.example`,
-  and named build/docs hosts) fails the build's tests.
+- **No real hosts in the tree**, enforced by gitleaks' `non-placeholder-url`
+  rule (pre-commit and CI) and, from M2, `UrlAllowlistConventionTests`: any
+  URL whose host is not on the allowlist (`example.invalid`, `*.example`, and
+  named build/docs hosts) fails.
 - **Update `Docs/` in the same change** as the code it describes.
 - **Core is pure and clock-free.** State machines take an injected
   `TimeProvider`; tests drive them with `FakeTimeProvider`.
