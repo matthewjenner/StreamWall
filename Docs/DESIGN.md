@@ -28,7 +28,8 @@ The site and everything that identifies it are sensitive. The concern is
 **readable output**: logs, diagnostics, error text, screenshots, and anything a
 developer or AI assistant sees while working on the app. The repo is public.
 
-- Every URL, selector and signed-out pattern is entered **in the app** and kept
+- Every URL and selector is entered **in the app** (or captured from the Browser
+  tab) and kept
   in one config file encrypted with Windows DPAPI (CurrentUser). Nothing
   site-specific exists in the repo.
 - Logs and diagnostics name things by **pseudonym**: sites as `site-7f3a9c`,
@@ -49,12 +50,12 @@ developer or AI assistant sees while working on the app. The repo is public.
 ## Core UX
 
 - **Browser tab.** The control panel has a Browser tab: one interactive web
-  view on the shared profile with back, forward, reload, home and a URL bar.
-  It is where the user signs in (including 2FA, by hand) and where they find
-  streams, browsing the site as they would in Edge. The app never sees,
-  stores or automates credentials or 2FA codes. Password saving and autofill
-  are off in the profile. "Sign in again" opens this tab; once signed in,
-  every signed-out cell reloads.
+  view on the shared profile with back, forward, reload and a URL bar, which
+  reopens at its last page. It is where the user signs in (including 2FA, by
+  hand), exactly as in Edge, and where they find streams. Every cell shares
+  that session, so there is no sign-in setup: no sign-in page, pattern or
+  selector to configure. The app never sees, stores or automates credentials
+  or 2FA codes. Password saving and autofill are off in the profile.
 - **Send to wall.** On any page in the Browser tab, **Send to wall** opens the
   picker: a mini map of every wall (1-3) showing each cell's label or "empty".
   Clicking a cell sends the current page there; **Next empty cell** skips the
@@ -65,9 +66,6 @@ developer or AI assistant sees while working on the app. The repo is public.
   browsing. Pasting a URL by hand remains as a fallback.
 - **Clear a cell.** An **X** on the cell strip (and in the picker) empties the
   cell. The stream stays in the library.
-- **Signed-out by pointing.** On the sign-in page, **This is the sign-in page**
-  records its path as the signed-out URL pattern. A CSS selector indicator
-  stays available as an advanced setting.
 - **Video-only cells.** After each navigation the cell finds its video (the
   largest visible one, or a per-stream CSS selector), makes it fill the cell on
   black, hides everything else, and re-applies itself if the page swaps the
@@ -76,15 +74,19 @@ developer or AI assistant sees while working on the app. The repo is public.
 - **Audio from every cell at once** by default (no focus-to-hear). Per-cell
   volume (0-100) and mute, a master volume that scales them, and a master mute;
   all persisted and re-applied after reloads.
-- **Signed-out handling.** A cell that hits a signed-out indicator (URL
-  pattern and/or selector) stops reloading and shows **Signed out**; however
-  many cells expire together, the user gets **one** "Sign in again" prompt,
-  which opens the Browser tab at the sign-in page. On startup, if the first
-  cell is signed out, that happens before the rest load.
-- **Self-healing cells.** A stalled video (no `currentTime` progress for N
-  seconds, default 20) reloads with backoff; a crashed web process is recreated.
-  Neither runs while a cell is signed out or interactive. Cells load a few
-  hundred ms apart so the site is never hit by 12 loads at once.
+- **Self-healing cells, no sign-in detection.** A cell whose video stops
+  advancing, or that has no video at all (an expired session lands on a login
+  page; a stream goes offline; the site is down), shows it on its strip and
+  reloads with backoff (default stall timeout 20 s, backing off to a few
+  minutes). The app does not try to tell "signed out" from "offline": if
+  several cells are stuck at once, the control panel says so once ("3 cells
+  have no video - if the site signed you out, sign in again in the Browser
+  tab"), and **Reload all** retries every cell now. After the user signs in
+  again, the next retry picks up the session and cells recover on their own.
+  Sessions on the target sites rarely expire (refresh tokens), so this is the
+  rare path. A crashed web process is recreated. No retries while a cell is
+  interactive. Cells load a few hundred ms apart so the site is never hit by
+  12 loads at once.
 - **Walls (1-3 windows from the start).** The control panel spawns up to three
   walls, each its own borderless window with a rows x columns grid (1x1 to 4x4)
   on a chosen monitor: fullscreen on that monitor or a saved position and
@@ -96,7 +98,7 @@ developer or AI assistant sees while working on the app. The repo is public.
   swapped by dragging their strips.
 - **Cell strip.** A slim strip above or below each cell holds the controls
   (nothing can be drawn over a native web view): label, status dot
-  (playing / stalled / signed out), volume, mute, reload, interactive toggle,
+  (playing / waiting / no video / error), volume, mute, reload, interactive toggle,
   expand, clear. Double-clicking a strip or a hotkey **expands** a cell to fill
   its wall; repeat to restore. A global hotkey hides every strip for a clean
   wall.
@@ -106,12 +108,13 @@ developer or AI assistant sees while working on the app. The repo is public.
   open / close / remove, monitor and grid size; Start all / Stop all / Reload
   all; master volume and mute; session status), **Browser** (above), **Streams**
   (the library: label, masked URL, optional video selector, default volume;
-  rename, remove, reorder, paste a URL), **Settings** (sign-in page, signed-out
-  indicators, stall timeout, presets, Sign out & clear session, which wipes the
-  profile after confirmation).
-- **Diagnostics view.** Per cell, structural facts only, e.g.
-  `cell 3 stream-1b2c4d: videos=2 selectorMatched=0 iframes=1 signedOut=false advancing=true`.
-  This is how video-only and signed-out problems get debugged without anyone
+  rename, remove, reorder, paste a URL), **Settings** (stall timeout, presets,
+  pseudonyms, Sign out & clear session, which wipes the profile after
+  confirmation).
+- **Diagnostics.** Per cell, structural facts only, logged on every status
+  change, e.g. `wall 1 cell 3 stream-1b2c4d: playing (top: videos=1 iframes=2
+  target=yes width=640 paused=no elementMuted=no volume=0.50 hostMuted=no)`.
+  This is how video-only and playback problems get debugged without anyone
   seeing the real page.
 - **Desktop citizen.** System tray with close-to-tray (walls keep running),
   single instance, About/version, in-app update banner. Dark-first.

@@ -122,17 +122,10 @@
             <!-- Settings -->
             <ScrollViewer IsVisible="{Binding IsSettingsTab}">
                 <StackPanel Spacing="10" MaxWidth="780" HorizontalAlignment="Left" DataContext="{Binding Settings}" x:DataType="vm:SettingsPageViewModel">
-                    <TextBlock Text="Sign-in page" FontWeight="SemiBold" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Name="SignInText" Text="{Binding SignInDisplay}" FontFamily="Consolas,monospace" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="540" />
-                        <Button Content="{Binding RevealText}" Command="{Binding ToggleRevealCommand}" />
-                        <Button Content="Clear" Command="{Binding ClearSignInCommand}" />
-                    </StackPanel>
-                    <TextBlock Text="Signed-out address pattern" FontWeight="SemiBold" Margin="0,8,0,0" />
-                    <TextBox PlaceholderText="Set from the Browser tab, for example /login" Text="{Binding SignedOutPattern, UpdateSourceTrigger=LostFocus}" />
-                    <TextBlock Text="Signed-out CSS selector (advanced)" FontWeight="SemiBold" Margin="0,8,0,0" />
-                    <TextBox PlaceholderText="An element that only exists on the sign-in page, for example #login-form" Text="{Binding SignedOutSelector, UpdateSourceTrigger=LostFocus}" />
-                    <TextBlock Text="Reload a cell whose video stalls for (seconds)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                    <TextBlock Text="Signing in" FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Sign in to the site in the Browser tab, as in any browser. Every cell shares that session. If it ever expires, sign in there again and the cells recover." />
+                    <TextBlock Text="Reload a cell whose video stalls for (seconds)" FontWeight="SemiBold" Margin="0,16,0,0" />
                     <NumericUpDown Value="{Binding StallTimeoutSeconds}" Minimum="5" Maximum="600" Increment="5" Width="160" HorizontalAlignment="Left" />
                     <TextBlock Text="Privacy" FontWeight="SemiBold" Margin="0,16,0,0" />
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"

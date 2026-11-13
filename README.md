@@ -26,7 +26,7 @@ never sees, stores or automates your credentials.
 
 ## Privacy
 
-Everything site-specific (stream URLs, the sign-in page, selectors) is entered
+Everything site-specific (stream URLs, selectors) is captured or entered
 in the app and stored encrypted for your Windows account (DPAPI). Logs and
 diagnostics never contain URLs, hosts or credentials: sites appear as stable
 pseudonyms such as `site-7f3a9c`. Browsing history and cache are cleared

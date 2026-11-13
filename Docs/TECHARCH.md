@@ -54,8 +54,8 @@ there (see the decisions log).
 StreamWall.Core      Pure (net10.0, no packages, no P/Invoke). Config model and rules
                      (streams, site settings, walls, presets) and its JSON document;
                      LogRedactor + Pseudonymizer + DiagLog; the state machines:
-                     StallWatchdog (per cell), SignedOutDetector (URL/selector match,
-                     one prompt for many cells), StartupStagger, UpdateService (over an
+                     CellWatchdog (per cell: no progress or no video -> reload with
+                     backoff; one notice when several are stuck), UpdateService (over an
                      IUpdater seam). Presentation: CellDisplay (strip label, status dot,
                      masked URL) as tested data.
 StreamWall.Platform  DPAPI IConfigVault (atomic write of config.dat), AppPaths, the log
@@ -96,7 +96,7 @@ thread**: CellHost feeds them events, and their timers use the injected
 - **Crash recovery:** `ProcessFailed` -> recreate the web view and reload.
 - **Profile settings:** password autosave and general autofill off.
 - **Scripts on every document, including iframes:** for video-only mode and
-  signed-out detection.
+  the probe.
 - **Web messages** from injected scripts to the host (structural facts only).
 - **Selective clearing:** `ClearBrowsingDataAsync` for history, disk cache,
   download history, autofill and session state, keeping cookies.
@@ -119,10 +119,10 @@ Embedded resources in `StreamWall.App`, plain JavaScript, idempotent:
   iframe works in two layers (verified in M1): the top frame pins the largest
   iframe, and the same script inside the iframe pins its video. A
   higher-ranked non-player iframe needs the per-stream selector override.
-- `audio.js` - applies `volume` / `muted` and re-applies when the element is
-  swapped.
-- `probe.js` - reports `currentTime`, video/iframe counts, selector match and
-  the signed-out selector check. Never URLs, titles or text.
+- Audio is part of `video-only.js`: it sets `volume`, unmutes the element
+  (sites autoplay muted; muting is the host's), and re-applies on changes.
+- `probe.js` - reports progress, video/iframe counts, target, width, paused,
+  element muted and volume. Never URLs, titles or text.
 
 ## Privacy mechanics
 
@@ -147,7 +147,7 @@ Embedded resources in `StreamWall.App`, plain JavaScript, idempotent:
 ## Demo mode
 
 `--demo` serves a fake site from embedded files through a WebView2 virtual
-host (under `example.invalid`): a sign-in page, a signed-out redirect, pages
+host (under `example.invalid`): a sign-in page, an expired-session redirect, pages
 with one video, several videos, a video in an iframe, and a video that stalls
 on demand, all using synthetic clips. It drives the real code paths with no
 account, and it is the only thing screenshots (`--screenshot`) and UI reviews

@@ -84,8 +84,8 @@ public static class CellScripts
     private static readonly string VideoOnly = Load("video-only.js");
     private static readonly string Probe = Load("probe.js");
 
-    public static string For(string? selector, double volume, string? signedOutSelector) =>
-        "window.__sw = " + JsonSerializer.Serialize(new { selector, volume, signedOutSelector }) + ";\n"
+    public static string For(string? selector, double volume) =>
+        "window.__sw = " + JsonSerializer.Serialize(new { selector, volume }) + ";\n"
         + VideoOnly + "\n" + Probe;
 
     private static string Load(string name)

@@ -50,9 +50,6 @@ public sealed partial class CellViewModel : ObservableObject
     private string? _videoSelector;
 
     [ObservableProperty]
-    private string? _signedOutSelector;
-
-    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EffectiveVolume))]
     private int _volume = ConfigRules.DefaultVolume;
 
@@ -89,7 +86,6 @@ public sealed partial class CellViewModel : ObservableObject
             Label = stream?.Label ?? "Empty";
             Url = stream?.Url;
             VideoSelector = stream?.VideoSelector;
-            SignedOutSelector = config.Site.SignedOutSelector;
             Volume = stream?.Volume ?? ConfigRules.DefaultVolume;
             Muted = stream?.Muted ?? false;
             MasterVolume = config.MasterVolume;

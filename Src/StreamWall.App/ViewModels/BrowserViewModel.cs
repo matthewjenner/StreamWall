@@ -9,8 +9,9 @@ using StreamWall.Core.Presentation;
 namespace StreamWall.App.ViewModels;
 
 /// <summary>
-/// The Browser tab: where the user signs in and finds streams. The view drives the web view and
-/// reports the current page here; Send to wall and "This is the sign-in page" act on it.
+/// The Browser tab: where the user signs in (like any browser; the session is shared with every
+/// cell) and finds streams. The view drives the web view and reports the current page here; Send to
+/// wall acts on it. The tab reopens at its last page.
 /// </summary>
 public sealed partial class BrowserViewModel : ObservableObject
 {
@@ -27,7 +28,8 @@ public sealed partial class BrowserViewModel : ObservableObject
 
     public DiagLog Log => _host.Log;
 
-    public string Home => _host.Home;
+    /// <summary>Where the tab opens: its last page (or the demo index, or blank).</summary>
+    public string StartPage => _host.BrowserStart;
 
     /// <summary>What the address bar shows and the user edits.</summary>
     [ObservableProperty]
@@ -35,7 +37,7 @@ public sealed partial class BrowserViewModel : ObservableObject
 
     /// <summary>The page the web view is on (from the view).</summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SendToWallCommand), nameof(MarkSignInPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SendToWallCommand))]
     private string? _currentUrl;
 
     [ObservableProperty]
@@ -55,6 +57,12 @@ public sealed partial class BrowserViewModel : ObservableObject
         return t.Contains('.', StringComparison.Ordinal) && ConfigRules.IsValidUrl(https) ? https : null;
     }
 
+    partial void OnCurrentUrlChanged(string? value)
+    {
+        if (value is not null)
+            _host.RememberBrowserPage(value);
+    }
+
     [RelayCommand(CanExecute = nameof(CanUseCurrentPage))]
     private async Task SendToWall()
     {
@@ -63,18 +71,5 @@ public sealed partial class BrowserViewModel : ObservableObject
         CellRef? cell = await _send(url, "this page");
         if (cell is CellRef target)
             Message = "Sent to " + WallMap.From(_host.Config).Describe(target) + ".";
-    }
-
-    [RelayCommand(CanExecute = nameof(CanUseCurrentPage))]
-    private void MarkSignInPage()
-    {
-        if (CurrentUrl is not { } url || !Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
-            return;
-        string? pattern = uri.AbsolutePath.Length > 1 ? uri.AbsolutePath : null;
-        _host.Update(c => c with { Site = c.Site with { SignInUrl = url, SignedOutUrlPattern = pattern ?? c.Site.SignedOutUrlPattern } });
-        _host.Log.SignInPageSet(pattern is not null);
-        Message = pattern is null
-            ? "Saved as the sign-in page."
-            : "Saved as the sign-in page. Cells that land on " + pattern + " will show Signed out.";
     }
 }

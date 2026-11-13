@@ -3,7 +3,6 @@
 (() => {
   if (window.__swProbe) return;
   window.__swProbe = true;
-  const cfg = window.__sw || {};
   const isTop = window === window.top;
   let raf = 0;
   const tick = () => { raf++; requestAnimationFrame(tick); };
@@ -38,8 +37,6 @@
       dropped: q ? q.droppedVideoFrames : null,
       frames: q ? q.totalVideoFrames : null,
       vw: v ? v.videoWidth : null,
-      cookie: !!cfg.runId && document.cookie.indexOf('sw_shared=' + cfg.runId) >= 0,
-      signedOut: cfg.signedOutSelector ? !!document.querySelector(cfg.signedOutSelector) : null,
     };
     raf = 0;
     try { window.chrome.webview.postMessage(JSON.stringify(m)); } catch (e) { /* no bridge */ }

@@ -29,23 +29,20 @@ public sealed record AppConfig
     /// <summary>Every URL in the config, for registering with the log redactor.</summary>
     public IEnumerable<string?> Urls()
     {
-        yield return Site.SignInUrl;
+        yield return Site.BrowserUrl;
         foreach (StreamConfig stream in Streams)
             yield return stream.Url;
     }
 }
 
-/// <summary>The site everything signs in to.</summary>
+/// <summary>
+/// Site-wide settings. There is no sign-in configuration: the user signs in in the Browser tab like
+/// any browser, and a cell that loses its video retries on its own (Docs/DESIGN.md).
+/// </summary>
 public sealed record SiteConfig
 {
-    /// <summary>Where the sign-in window opens.</summary>
-    public string? SignInUrl { get; init; }
-
-    /// <summary>A URL substring that means "redirected to sign-in".</summary>
-    public string? SignedOutUrlPattern { get; init; }
-
-    /// <summary>A CSS selector that only exists on the sign-in page.</summary>
-    public string? SignedOutSelector { get; init; }
+    /// <summary>The Browser tab's last page, where it reopens. A URL, so it is redacted like any other.</summary>
+    public string? BrowserUrl { get; init; }
 
     /// <summary>Reload a cell whose video has not advanced for this long.</summary>
     public int StallTimeoutSeconds { get; init; } = ConfigRules.DefaultStallTimeoutSeconds;

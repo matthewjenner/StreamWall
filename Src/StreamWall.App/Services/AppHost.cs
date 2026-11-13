@@ -28,6 +28,7 @@ public sealed class AppHost : IDisposable
         _ownedSink = ownedSink;
         // Until the config (and its pseudonym key) loads, names are throwaway but still redacted.
         Log = new DiagLog(sink, new LogRedactor(Pseudonymizer.Ephemeral()));
+        Store = store;
         Repository = new ConfigRepository(store, Log);
     }
 
@@ -54,6 +55,9 @@ public sealed class AppHost : IDisposable
     /// <summary>Where log lines go; tests read a demo host's memory sink through it.</summary>
     internal IDiagSink Sink { get; }
 
+    /// <summary>Where the config is saved; tests read a demo host's memory store through it.</summary>
+    internal IConfigStore Store { get; }
+
     public WebEnvironment Web { get; }
 
     public ConfigRepository Repository { get; }
@@ -62,8 +66,15 @@ public sealed class AppHost : IDisposable
 
     public bool IsLoaded { get; private set; }
 
-    /// <summary>Where the Browser tab's Home goes: the sign-in page, else the demo index, else blank.</summary>
-    public string Home => Config.Site.SignInUrl ?? (Demo ? WebEnvironment.DemoHome : "about:blank");
+    /// <summary>Where the Browser tab opens: its last page, else the demo index, else blank.</summary>
+    public string BrowserStart => Config.Site.BrowserUrl ?? (Demo ? WebEnvironment.DemoHome : "about:blank");
+
+    /// <summary>Remembers the Browser tab's page so it reopens there (http(s) pages only).</summary>
+    public void RememberBrowserPage(string url)
+    {
+        if (ConfigRules.IsValidUrl(url) && url != Config.Site.BrowserUrl)
+            Update(c => c with { Site = c.Site with { BrowserUrl = url } });
+    }
 
     public static string Version { get; } =
         typeof(AppHost).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
@@ -130,10 +141,10 @@ public sealed class AppHost : IDisposable
         {
             await pending.CancelAsync();
             _pendingSave = null;
-            await _saving.ConfigureAwait(false);
-            await SaveNowAsync().ConfigureAwait(false);
+            await _saving;
+            await SaveNowAsync();
         }
-        await _saving.ConfigureAwait(false);
+        await _saving;
     }
 
     private void ScheduleSave()
@@ -179,7 +190,6 @@ public sealed class AppHost : IDisposable
         var c = new StreamConfig { Label = "Demo iframe", Url = Page("iframe.html"), Volume = 30 };
         return new AppConfig
         {
-            Site = new SiteConfig { SignInUrl = Page("login.html"), SignedOutUrlPattern = "/login" },
             Streams = [a, b, c],
             Walls = [new WallConfig { Name = "Wall 1", Rows = 2, Columns = 2, Cells = [a.Id, b.Id, c.Id, null] }],
         };

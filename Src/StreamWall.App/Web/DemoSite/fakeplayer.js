@@ -1,6 +1,6 @@
 // Demo-only stand-in for a typical HTML5 player library. The picture is a canvas animation
 // captured as a MediaStream (no media files, no audio), so --demo needs nothing downloaded.
-// It reproduces what matters to the injected scripts: a wrapper with a transform, inline
+// It reproduces what matters to the injected scripts: autoplay muted, a wrapper with a transform, inline
 // styles on the <video>, a control bar and big play button over it, a saved volume it restores
 // after loading, and (optionally) re-creating its <video> element.
 window.FakePlayer = {
@@ -41,7 +41,8 @@ window.FakePlayer = {
       v.setAttribute('playsinline', '');
       v.setAttribute('data-testid', 'video');
       v.autoplay = true;
-      v.muted = !!opts.muted;
+      // Like real sites: autoplay starts muted (StreamWall must unmute it; found on a real site).
+      v.muted = true;
       v.srcObject = stream;
       v.style.cssText = 'position:relative;margin:0;padding:0;width:100%;height:100%;' +
         'object-fit:contain;background-color:rgba(0,0,0,0);display:inline;';

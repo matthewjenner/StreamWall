@@ -50,6 +50,10 @@ public sealed class CellView : DockPanel
     private DateTime _lastAdvance = DateTime.MinValue;
     private DateTime _lastProbe = DateTime.MinValue;
     private readonly Dictionary<bool, double> _lastPlayed = [];
+    private readonly Dictionary<bool, ProbeFacts> _facts = [];
+    private DateTime _loggedAt = DateTime.MinValue;
+    private readonly DispatcherTimer _audioLog = new() { Interval = TimeSpan.FromMilliseconds(700) };
+    private (bool Muted, double Volume)? _loggedAudio;
     private bool _sawTarget;
 
     public CellView(WebEnvironment web, DiagLog log)
@@ -76,6 +80,7 @@ public sealed class CellView : DockPanel
         _volume.ValueChanged += (_, e) => { if (!_syncing && _vm is not null) _vm.Volume = (int)Math.Round(e.NewValue); };
         _clear.Click += (_, _) => _vm?.ClearCommand.Execute(null);
         _statusTimer.Tick += (_, _) => UpdateStatus();
+        _audioLog.Tick += (_, _) => LogAudio();
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -119,19 +124,39 @@ public sealed class CellView : DockPanel
         {
             case nameof(CellViewModel.Url):
             case nameof(CellViewModel.VideoSelector):
-            case nameof(CellViewModel.SignedOutSelector):
                 if (_started)
                     Recreate();
                 break;
             case nameof(CellViewModel.EffectiveVolume):
                 PostVolume();
+                ScheduleAudioLog();
                 break;
             case nameof(CellViewModel.EffectiveMuted):
                 if (_core is not null && _vm is not null)
                     _core.IsMuted = _vm.EffectiveMuted;
+                ScheduleAudioLog();
                 break;
         }
         SyncStrip();
+    }
+
+    /// <summary>Logs the audible state once it has settled (a slider drag is one line, not dozens).</summary>
+    private void ScheduleAudioLog()
+    {
+        _audioLog.Stop();
+        _audioLog.Start();
+    }
+
+    private void LogAudio()
+    {
+        _audioLog.Stop();
+        if (_vm is null || _vm.IsEmpty)
+            return;
+        (bool, double) state = (_vm.EffectiveMuted, Math.Round(_vm.EffectiveVolume, 2));
+        if (state == _loggedAudio)
+            return;
+        _loggedAudio = state;
+        _log.CellAudio(_vm.WallNumber, _vm.Number, _vm.StreamId, state.Item1, state.Item2);
     }
 
     private void SyncStrip()
@@ -173,14 +198,16 @@ public sealed class CellView : DockPanel
         int generation = ++_generation;
         _sawTarget = false;
         _lastAdvance = DateTime.MinValue;
+        // The old page's last probe must not count for the new one (it caused a false "no video").
+        _lastProbe = DateTime.MinValue;
         _lastPlayed.Clear();
+        _facts.Clear();
         _vm.Status = "loading";
         _placeholder.IsVisible = false;
 
         var view = new NativeWebView { Background = Brushes.Black };
         _view = view;
         string? selector = _vm.VideoSelector;
-        string? signedOut = _vm.SignedOutSelector;
         _web.Attach(view, async core =>
         {
             if (generation != _generation)
@@ -197,7 +224,7 @@ public sealed class CellView : DockPanel
                 frame.WebMessageReceived += (_, fa) => OnMessage(fa.TryGetWebMessageAsString(), top: false);
                 frame.Destroyed += (_, _) => _frames.Remove(frame);
             };
-            await core.AddScriptToExecuteOnDocumentCreatedAsync(CellScripts.For(selector, _vm?.EffectiveVolume ?? 0.5, signedOut));
+            await core.AddScriptToExecuteOnDocumentCreatedAsync(CellScripts.For(selector, _vm?.EffectiveVolume ?? 0.5));
             if (generation == _generation)
                 core.Navigate(url);
         }, ex =>
@@ -269,6 +296,14 @@ public sealed class CellView : DockPanel
             if (!r.TryGetProperty("k", out JsonElement k) || k.GetString() != "probe")
                 return;
             _lastProbe = DateTime.UtcNow;
+            _facts[top] = new ProbeFacts(
+                r.GetProperty("videos").GetInt32(),
+                r.GetProperty("iframes").GetInt32(),
+                r.GetProperty("hasTarget").GetBoolean(),
+                r.TryGetProperty("vw", out JsonElement vw) && vw.ValueKind == JsonValueKind.Number ? vw.GetInt32() : 0,
+                r.TryGetProperty("paused", out JsonElement ps) && ps.ValueKind == JsonValueKind.True,
+                r.TryGetProperty("muted", out JsonElement mu) && mu.ValueKind == JsonValueKind.True,
+                r.TryGetProperty("vol", out JsonElement vo) && vo.ValueKind == JsonValueKind.Number ? vo.GetDouble() : -1);
             if (!r.GetProperty("hasTarget").GetBoolean())
                 return;
             _sawTarget = true;
@@ -293,6 +328,21 @@ public sealed class CellView : DockPanel
             : _sawTarget ? "waiting"
             : now - _lastProbe < TimeSpan.FromSeconds(3) && _lastProbe > DateTime.MinValue ? "no video"
             : "loading";
+        if (status != _vm.Status || (status == "loading" && now - _loggedAt > TimeSpan.FromSeconds(15)))
+        {
+            _loggedAt = now;
+            _log.CellStatus(_vm.WallNumber, _vm.Number, _vm.StreamId, status, DescribeFacts());
+        }
         _vm.Status = status;
     }
+
+    /// <summary>"top: videos=1 iframes=0 target=yes width=1920 paused=no elementMuted=no volume=0.50 hostMuted=no; frame: ..." - numbers and booleans only.</summary>
+    private string DescribeFacts()
+    {
+        static string YesNo(bool b) => b ? "yes" : "no";
+        return string.Join("; ", _facts.OrderByDescending(f => f.Key).Select(f => string.Create(CultureInfo.InvariantCulture,
+            $"{(f.Key ? "top" : "frame")}: videos={f.Value.Videos} iframes={f.Value.Iframes} target={YesNo(f.Value.HasTarget)} width={f.Value.Width} paused={YesNo(f.Value.Paused)} elementMuted={YesNo(f.Value.ElementMuted)} volume={(f.Value.Volume < 0 ? "-" : f.Value.Volume.ToString("0.00", CultureInfo.InvariantCulture))} hostMuted={YesNo(_core?.IsMuted == true)}")));
+    }
+
+    private readonly record struct ProbeFacts(int Videos, int Iframes, bool HasTarget, int Width, bool Paused, bool ElementMuted, double Volume);
 }

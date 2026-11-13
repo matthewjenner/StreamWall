@@ -10,8 +10,8 @@ using StreamWall.App.ViewModels;
 namespace StreamWall.App.Views;
 
 /// <summary>
-/// The Browser tab: an interactive web view on the shared profile with back / forward / reload /
-/// home, an address bar, Send to wall and "This is the sign-in page". Links that would open a new
+/// The Browser tab: an interactive web view on the shared profile with back / forward / reload,
+/// an address bar and Send to wall. It reopens at its last page. Links that would open a new
 /// window open here instead. The web view is created the first time the tab is shown.
 /// </summary>
 public sealed class BrowserView : DockPanel
@@ -19,10 +19,8 @@ public sealed class BrowserView : DockPanel
     private readonly Button _back = new() { Content = "<", Name = "BackButton" };
     private readonly Button _forward = new() { Content = ">", Name = "ForwardButton" };
     private readonly Button _reload = new() { Content = "Reload", Name = "ReloadButton" };
-    private readonly Button _home = new() { Content = "Home", Name = "HomeButton" };
     private readonly TextBox _address = new() { Name = "AddressBox", PlaceholderText = "Address", VerticalContentAlignment = VerticalAlignment.Center };
     private readonly Button _send = new() { Content = "Send to wall", Name = "SendToWallButton", Classes = { "accent" } };
-    private readonly Button _signIn = new() { Content = "This is the sign-in page", Name = "SignInPageButton" };
     private readonly TextBlock _message = new() { Opacity = 0.75, Margin = new Thickness(0, 4, 0, 4), TextWrapping = TextWrapping.Wrap };
     private readonly Panel _body = new() { Background = Brushes.White };
 
@@ -37,10 +35,8 @@ public sealed class BrowserView : DockPanel
         left.Children.Add(_back);
         left.Children.Add(_forward);
         left.Children.Add(_reload);
-        left.Children.Add(_home);
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(6, 0, 0, 0) };
         right.Children.Add(_send);
-        right.Children.Add(_signIn);
         DockPanel.SetDock(left, Dock.Left);
         DockPanel.SetDock(right, Dock.Right);
         toolbar.Children.Add(left);
@@ -56,7 +52,6 @@ public sealed class BrowserView : DockPanel
         _back.Click += (_, _) => { if (_core?.CanGoBack == true) _core.GoBack(); };
         _forward.Click += (_, _) => { if (_core?.CanGoForward == true) _core.GoForward(); };
         _reload.Click += (_, _) => _core?.Reload();
-        _home.Click += (_, _) => Go(_vm?.Home);
         _address.KeyDown += (_, e) =>
         {
             if (e.Key != Key.Enter)
@@ -80,7 +75,6 @@ public sealed class BrowserView : DockPanel
             return;
         _vm.PropertyChanged += OnViewModelChanged;
         _send.Command = _vm.SendToWallCommand;
-        _signIn.Command = _vm.MarkSignInPageCommand;
         _message.Text = _vm.Message;
     }
 
@@ -121,7 +115,7 @@ public sealed class BrowserView : DockPanel
                 _back.IsEnabled = core.CanGoBack;
                 _forward.IsEnabled = core.CanGoForward;
             };
-            core.Navigate(vm.Home);
+            core.Navigate(vm.StartPage);
             return Task.CompletedTask;
         }, ex =>
         {

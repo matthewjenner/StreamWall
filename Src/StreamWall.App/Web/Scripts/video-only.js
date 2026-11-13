@@ -74,12 +74,15 @@
     });
   }
 
+  // Sites autoplay with the element muted. Muting is the host's job (CoreWebView2.IsMuted, driven
+  // by the strip and "Mute all"), so the element itself is always unmuted, and set to our volume,
+  // whenever the player changes either.
   function applyAudio(v) {
-    if (typeof cfg.volume === 'number' && Math.abs(v.volume - cfg.volume) > 0.001) {
-      if (reapplies++ < 50) {
-        v.volume = cfg.volume;
-        post({ k: 'event', name: 'volume-reapplied', top: isTop });
-      }
+    const wrongVolume = typeof cfg.volume === 'number' && Math.abs(v.volume - cfg.volume) > 0.001;
+    if ((v.muted || wrongVolume) && reapplies++ < 50) {
+      if (v.muted) v.muted = false;
+      if (wrongVolume) v.volume = cfg.volume;
+      post({ k: 'event', name: 'audio-reapplied', top: isTop });
     }
   }
 

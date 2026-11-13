@@ -24,7 +24,7 @@ Stop for review after each phase.
 | M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Done        |
 | M3    | Browser and walls: shared environment, Browser tab (sign-in), 1-3 wall windows with N x M grids and monitor choice, Send to wall picker across walls, clear, stream library, video-only and audio scripts, demo site | Done        |
 | M4    | Wall polish: presets, full cell strips, expand, drag-to-swap, always-on-top / borderless / saved bounds, global hotkeys, 12-cell measurement | Not started |
-| M5    | Resilience: signed-out detection + single prompt, stall watchdog, crash recovery, staggered loading, throttling verified    | Not started |
+| M5    | Resilience: cell watchdog (stall or no video -> reload with backoff), one "cells have no video" notice, Reload all, crash recovery, throttling verified | Not started |
 | M6    | Desktop and release: tray, single instance, profile hygiene, Velopack, release workflow, README numbers, v0.1.0             | Not started |
 
 ### M1 spike checklist
@@ -59,7 +59,14 @@ Recorded generically on purpose (no names, hosts or identifying markup).
   volume (so `audio.js` re-applies ours on `volumechange`).
 - The element carries `autoplay` and has a stable id and test attribute, so a
   per-stream selector override is easy if "largest visible" ever picks wrong.
-- Still unknown: whether the player sits inside an iframe. M1 covers both.
+- From the first real run (2026-11-13, redacted log only): the video is in the
+  main document, not an iframe; pages carry 1-5 other iframes with no video,
+  which the picker correctly ignores. Every stream reported a 640 px video
+  width (open: the stream's real size, or the player choosing low quality for
+  a small cell). The player autoplays with the element muted, so the script
+  unmutes it (see M3 notes).
+- The session persisted across restarts: cells played on relaunch without
+  signing in again.
 
 ### Acceptance checks (v0.1.0)
 
@@ -163,8 +170,8 @@ With streams configured in the app by the user:
 - [x] Web view host: one shared environment (AppPaths.WebView, browser
       arguments), SDK wrap, profile settings, new-window blocking; WebView2's
       WPF reference stripped (MSB3277).
-- [x] Browser tab: back / forward / reload / home / URL bar, Send to wall,
-      This is the sign-in page.
+- [x] Browser tab: back / forward / reload / URL bar, Send to wall
+      (Home and "This is the sign-in page" later removed; see decisions).
 - [x] Wall windows: 1-3, each borderless on a chosen monitor (fullscreen),
       N x M cells with a minimal strip (label, mute, volume, clear).
 - [x] Picker: every wall's grid, filled vs empty, replace confirm, next empty.
@@ -203,11 +210,38 @@ With streams configured in the app by the user:
 - Found and fixed: the Walls tab's monitor ComboBox lost its selection when the
   monitor list arrived after the row (now re-applied after the items update,
   and a transient -1 is never saved).
+- First real-site run (2026-11-13): 2 walls, 5 streams sent, a replace and a
+  clear; every cell "playing" about 2 s after loading. Found and fixed:
+  - **No sound.** The site autoplays with the `<video>` muted; the script only
+    set volume. It now also unmutes the element whenever the player re-mutes
+    it; muting is solely the host's (`CoreWebView2.IsMuted`). The demo player
+    now autoplays muted too.
+  - **Quitting marked every wall closed.** The lifetime closed the wall windows
+    before the Exit event, which read as the user closing them. And the exit
+    save blocked the UI thread on a save that needed it (5 s hang, last change
+    lost). `Shutdown.Wire` now handles the control panel's Closing: cancel,
+    close walls as shutdown, await the save, then close (`ShutdownUiTests`).
+  - A cell switching streams briefly logged "no video" (the previous page's
+    probe time was reused); reset on reload.
+- Cell diagnostics: status changes are logged with the probe's facts (video
+  and iframe counts, which frame has the target, width, paused, element muted,
+  volume, host muted, signed out), and audio changes once settled. This is
+  how the real site is debugged without seeing it.
 - Not yet: signed-out detection and the "Sign in again" prompt (M5), presets,
   expand, drag-to-swap, hotkeys, always-on-top (M4), Sign out & clear session
   (M6).
 
 ### Decisions log
+
+- **2026-11-13** - No sign-in configuration (user decision). Signing in is just
+  the Browser tab, like any browser; the shared profile carries the session to
+  every cell, and the target sites rarely expire sessions (refresh tokens).
+  Removed: "This is the sign-in page", the Home button, and the signed-out URL
+  pattern / selector settings. Recovery is generic instead (M5): a cell with no
+  progress or no video reloads with backoff, several stuck cells produce one
+  notice, and Reload all retries now; after signing in again the cells recover
+  on their own. It cannot tell "signed out" from "offline", which is fine for
+  a wall. The Browser reopens at its last page (saved, redacted like any URL).
 
 - **2026-11-13** - Streams are picked by browsing, not typing: the control
   panel's Browser tab (shared profile) is where the user signs in and finds

@@ -31,8 +31,8 @@ published".
 - **Never ask for, guess, print or echo real URLs, domains or credentials.**
   Code, tests, docs, samples and commit messages use placeholders under
   `example.invalid` (e.g. `https://stream.example.invalid/view/1`).
-- **Nothing site-specific is hard-coded.** Every URL, selector and signed-out
-  pattern is entered by the user in the app's own UI at runtime.
+- **Nothing site-specific is hard-coded.** Every URL and selector
+  is captured from the Browser tab or entered by the user in the app at runtime.
 - **Never open, read or parse** the encrypted config (`%APPDATA%\StreamWall\App\config.dat`)
   or the WebView2 profile (`%LOCALAPPDATA%\StreamWall\WebView`) from tools.
   The log files are safe to read: they are redacted and pseudonymized by design.
@@ -71,7 +71,7 @@ Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
 Src/StreamWall.Core/       Pure logic. Now: Config (AppConfig, WallConfig, WallLayout, ConfigRules,
                            ConfigDocument, ConfigRepository + IConfigStore), Diagnostics (DiagLog,
                            LogRedactor, Pseudonymizer), Presentation (UrlMask, WallMap). Later:
-                           presets, StallWatchdog, SignedOutDetector, CellDisplay.
+                           presets, CellWatchdog, CellDisplay.
                            net10.0, no packages, no P/Invoke (CorePurityConventionTests).
 Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, atomic, sets an
                            unreadable file aside), FileDiagSink, AppPaths. Later: profile

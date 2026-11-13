@@ -54,13 +54,24 @@ public sealed class DiagLog(IDiagSink sink, LogRedactor redactor)
 
     public void CellCleared(int wall, int cell) => Emit(DiagLevel.Info, "Wall", F($"wall {wall} cell {cell} cleared"));
 
+    /// <summary>
+    /// A cell's status changed. <paramref name="facts"/> is the probe's structural summary
+    /// (counts, booleans, numbers - see probe.js); it still passes through the redactor.
+    /// </summary>
+    public void CellStatus(int wall, int cell, Guid? stream, string status, string facts) =>
+        Emit(DiagLevel.Info, "Cell", F($"wall {wall} cell {cell}") + (stream is Guid id ? " " + redactor.Pseudonyms.Stream(id) : "")
+            + ": " + status + (facts.Length > 0 ? " (" + facts + ")" : ""));
+
     public void CellFailed(int wall, int cell, Exception error) =>
         Emit(DiagLevel.Error, "Cell", F($"wall {wall} cell {cell}: ") + error.Message);
 
+    /// <summary>A cell's audible state changed (after a short settle, so a slider drag is one line).</summary>
+    public void CellAudio(int wall, int cell, Guid? stream, bool muted, double volume) =>
+        Emit(DiagLevel.Info, "Cell", F($"wall {wall} cell {cell}") + (stream is Guid id ? " " + redactor.Pseudonyms.Stream(id) : "")
+            + (muted ? ": audio muted" : ": audio on") + F($" (volume {volume:0.00})"));
+
     public void WebViewUnavailable(Exception error) => Emit(DiagLevel.Error, "Web", "web view could not start: " + error.Message);
 
-    public void SignInPageSet(bool withPattern) =>
-        Emit(DiagLevel.Info, "Config", withPattern ? "sign-in page and signed-out pattern set" : "sign-in page set");
 
     private void Emit(DiagLevel level, string scope, string message) => sink.Write(level, scope, redactor.Redact(message));
 

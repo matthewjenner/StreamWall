@@ -45,13 +45,8 @@ public sealed partial class App : Application
             desktop.MainWindow = window;
             if (AppArgs.ScreenshotFolder is { } folder)
                 window.Opened += (_, _) => _ = Screenshots.RunAsync(window, viewModel, host, walls, folder, () => desktop.Shutdown());
-            desktop.Exit += (_, _) =>
-            {
-                _walls?.CloseAll();
-                // Off the UI thread: the save's continuations must not need the (exiting) dispatcher.
-                Task.Run(host.FlushAsync).Wait(TimeSpan.FromSeconds(5));
-                host.Dispose();
-            };
+            Shutdown.Wire(window, walls, host);
+            desktop.Exit += (_, _) => host.Dispose();
             _ = host.StartAsync();
         }
         base.OnFrameworkInitializationCompleted();

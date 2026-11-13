@@ -100,12 +100,13 @@ public sealed class MainWindowUiTests
     public Task CancelingThePickerChangesNothing() => TestApp.Run(() =>
     {
         using UiHarness ui = UiHarness.Start();
-        AppConfig before = ui.Host.Config;
         ui.ViewModel.PickCell = _ => Task.FromResult<CellRef?>(null);
         ui.ViewModel.Browser.CurrentUrl = DemoPage;
+        AppConfig before = ui.Host.Config;
         ui.ViewModel.Browser.SendToWallCommand.Execute(null);
         ui.Settle();
-        ui.Host.Config.Should().BeSameAs(before);
+        ui.Host.Config.Streams.Should().BeSameAs(before.Streams);
+        ui.Host.Config.Walls.Should().BeSameAs(before.Walls);
     });
 
     [Fact]
@@ -146,15 +147,17 @@ public sealed class MainWindowUiTests
     });
 
     [Fact]
-    public Task MarkingTheSignInPageSavesItAndItsPath() => TestApp.Run(() =>
+    public Task TheBrowserReopensAtItsLastPage() => TestApp.Run(() =>
     {
         using UiHarness ui = UiHarness.Start(new AppConfig());
-        ui.ViewModel.Browser.CurrentUrl = "https://cams.example.invalid/account/login?next=1";
-        ui.ViewModel.Browser.MarkSignInPageCommand.Execute(null);
+        ui.ViewModel.Browser.StartPage.Should().Be(WebEnvironment.DemoHome, "a fresh demo opens at the demo index");
 
-        ui.Host.Config.Site.SignInUrl.Should().Be("https://cams.example.invalid/account/login?next=1");
-        ui.Host.Config.Site.SignedOutUrlPattern.Should().Be("/account/login");
-        ui.LogText.Should().Contain("sign-in page and signed-out pattern set").And.NotContain("account/login");
+        ui.ViewModel.Browser.CurrentUrl = "https://cams.example.invalid/account/page?x=1";
+        ui.ViewModel.Browser.CurrentUrl = "about:blank";
+
+        ui.Host.Config.Site.BrowserUrl.Should().Be("https://cams.example.invalid/account/page?x=1", "only http(s) pages are remembered");
+        ui.ViewModel.Browser.StartPage.Should().Be("https://cams.example.invalid/account/page?x=1");
+        ui.LogText.Should().NotContain("account/page");
     });
 
     [Fact]

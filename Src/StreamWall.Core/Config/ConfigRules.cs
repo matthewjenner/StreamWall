@@ -81,9 +81,7 @@ public static class ConfigRules
             Version = AppConfig.CurrentVersion,
             Site = site with
             {
-                SignInUrl = Blank(site.SignInUrl),
-                SignedOutUrlPattern = Blank(site.SignedOutUrlPattern),
-                SignedOutSelector = Blank(site.SignedOutSelector),
+                BrowserUrl = IsValidUrl(site.BrowserUrl) ? site.BrowserUrl!.Trim() : null,
                 StallTimeoutSeconds = Math.Clamp(site.StallTimeoutSeconds, MinStallTimeoutSeconds, MaxStallTimeoutSeconds),
             },
             Streams = streams,

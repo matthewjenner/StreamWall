@@ -12,15 +12,14 @@ public sealed class ConfigRulesTests
         var config = new AppConfig
         {
             MasterVolume = 140,
-            Site = new SiteConfig { SignInUrl = "  ", SignedOutSelector = " #login-form ", StallTimeoutSeconds = 1 },
+            Site = new SiteConfig { BrowserUrl = "not a url", StallTimeoutSeconds = 1 },
             Streams = [new StreamConfig { Label = "  Cam A ", Url = " https://cams.example.invalid/1 ", Volume = -5, VideoSelector = "" }],
         };
 
         AppConfig n = ConfigRules.Normalize(config);
 
         n.MasterVolume.Should().Be(100);
-        n.Site.SignInUrl.Should().BeNull();
-        n.Site.SignedOutSelector.Should().Be("#login-form");
+        n.Site.BrowserUrl.Should().BeNull("only an http(s) page is kept");
         n.Site.StallTimeoutSeconds.Should().Be(ConfigRules.MinStallTimeoutSeconds);
         n.Streams[0].Label.Should().Be("Cam A");
         n.Streams[0].Url.Should().Be("https://cams.example.invalid/1");
@@ -71,7 +70,7 @@ public sealed class ConfigDocumentTests
         {
             MasterVolume = 80,
             MasterMuted = true,
-            Site = new SiteConfig { SignInUrl = "https://cams.example.invalid/login", SignedOutUrlPattern = "/login", SignedOutSelector = "#login-form", StallTimeoutSeconds = 30 },
+            Site = new SiteConfig { BrowserUrl = "https://cams.example.invalid/home", StallTimeoutSeconds = 30 },
             Streams = [stream],
         });
 
@@ -83,6 +82,15 @@ public sealed class ConfigDocumentTests
         back.MasterVolume.Should().Be(80);
         back.MasterMuted.Should().BeTrue();
         back.PseudonymKey.Should().Be(config.PseudonymKey);
+    }
+
+    [Fact]
+    public void AnOlderConfigWithRemovedSignInSettingsStillLoads()
+    {
+        const string old = """{"site":{"signInUrl":"https://cams.example.invalid/login","signedOutUrlPattern":"/login","signedOutSelector":"#f","stallTimeoutSeconds":30},"streams":[]}""";
+        ConfigDocument.TryParse(old, out AppConfig config, out _).Should().BeTrue();
+        config.Site.StallTimeoutSeconds.Should().Be(30);
+        ConfigDocument.Serialize(config).Should().NotContain("signIn").And.NotContain("signedOut");
     }
 
     [Fact]
