@@ -1,0 +1,7 @@
+body { margin: 0; font: 14px sans-serif; background: #f4f4f4; color: #222; }
+header { height: 56px; background: #2a4d8f; color: #fff; padding: 16px; box-sizing: border-box; }
+.layout { display: flex; gap: 16px; padding: 16px; }
+.main { flex: 1; }
+.chat { width: 300px; height: 600px; background: #fff; border: 1px solid #ccc; overflow: auto; }
+.chat p { margin: 6px 10px; }
+.banner { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #c33; color: #fff; padding: 20px; }

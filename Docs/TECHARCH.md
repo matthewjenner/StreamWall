@@ -3,8 +3,8 @@
 StreamWall is a .NET 10 + Avalonia 12 desktop app for Windows. Product design:
 [DESIGN.md](DESIGN.md). Status and decisions: [workplan.md](workplan.md).
 
-This describes the target architecture. Sections marked **(M1)** depend on the
-spike results and are confirmed or revised there.
+This describes the target architecture. The web view approach was proven by
+the M1 spike (`Spikes/StreamWall.WebViewSpike`; results in the workplan).
 
 ## Stack
 
@@ -12,10 +12,13 @@ spike results and are confirmed or revised there.
   warnings as errors.
 - **Avalonia 12** with **CommunityToolkit.Mvvm** (compiled bindings), Fluent
   theme. Windows 10 2004+ x64.
-- **Web views:** `Avalonia.Controls.WebView` (`NativeWebView`, MIT), which
-  uses the WebView2 Evergreen runtime on Windows. Fallback **(M1)**: host
-  `Microsoft.Web.WebView2` directly if `NativeWebView` does not expose what is
-  listed under "WebView2 requirements".
+- **Web views (hybrid, proven in M1):** `Avalonia.Controls.WebView`
+  (`NativeWebView`, MIT) hosts WebView2 and sets the environment options
+  (`EnvironmentRequested`). On `AdapterCreated`, the
+  `IWindowsWebView2PlatformHandle` COM pointer is wrapped with
+  `CoreWebView2.CreateFromComICoreWebView2` from `Microsoft.Web.WebView2`, and
+  everything else (profile, scripts, frames, messages, new windows, crashes,
+  mute, data clearing) goes through the official SDK.
 - **DPAPI** (`System.Security.Cryptography.ProtectedData`) for the config.
 - **Velopack** for the installer and updates.
 - **Tests:** xUnit v3 on Microsoft.Testing.Platform, AwesomeAssertions, fake
@@ -40,7 +43,7 @@ bumping.
 | xunit.v3                                     | 4.0.3        |                                               |
 | AwesomeAssertions                            | 9.6.0        | Apache-2.0 fork of FluentAssertions 7         |
 | Microsoft.Extensions.TimeProvider.Testing    | 10.11.0      | Stay on the 10.x line with .NET 10            |
-| Microsoft.Web.WebView2 (fallback only)       | 1.0.4314.35  | Only if M1 picks direct hosting               |
+| Microsoft.Web.WebView2                       | 1.0.4314.35  | SDK over Avalonia's COM pointer; strip its WPF reference (MSB3277) |
 
 .NET 11 (STS) is out, but every local app is on .NET 10 LTS; StreamWall stays
 there (see the decisions log).
@@ -76,7 +79,7 @@ thread**: CellHost feeds them events, and their timers use the injected
 `TimeProvider` with callbacks posted back via `Dispatcher.UIThread`. Disk I/O
 (config, logs) is async and off the UI thread. Script calls are always awaited.
 
-## WebView2 requirements (M1 checks each)
+## WebView2 requirements (all verified in M1 except where noted)
 
 - **One environment:** a single user-data folder
   (`%LOCALAPPDATA%\StreamWall\WebView`) and one set of browser arguments for
@@ -97,7 +100,11 @@ thread**: CellHost feeds them events, and their timers use the injected
 - **Web messages** from injected scripts to the host (structural facts only).
 - **Selective clearing:** `ClearBrowsingDataAsync` for history, disk cache,
   download history, autofill and session state, keeping cookies.
-- **No Chromium logging, no crash dumps** where the API allows.
+- **No Chromium logging, no crash dumps** where the API allows. Custom crash
+  reporting cannot be set through Avalonia's environment hook, so profile
+  hygiene deletes local crash dumps instead.
+- **App manifest** declaring Windows 10/11 support (Avalonia's native control
+  host needs it).
 
 ## Injected scripts
 
@@ -107,9 +114,11 @@ Embedded resources in `StreamWall.App`, plain JavaScript, idempotent:
   visible), leaves it in place in the DOM (moving it breaks React-style
   players), hides the rest with `visibility`, pins the video with
   `position: fixed; object-fit: contain` on black, and re-applies on DOM
-  changes (MutationObserver). Interactive mode removes the styling. A video
-  inside a cross-origin iframe is handled per frame, or by making the iframe
-  fill the viewport **(M1)**.
+  changes (MutationObserver). Interactive mode removes the styling. Candidates
+  are measured with the takeover styling off. A player in a cross-origin
+  iframe works in two layers (verified in M1): the top frame pins the largest
+  iframe, and the same script inside the iframe pins its video. A
+  higher-ranked non-player iframe needs the per-stream selector override.
 - `audio.js` - applies `volume` / `muted` and re-applies when the element is
   swapped.
 - `probe.js` - reports `currentTime`, video/iframe counts, selector match and

@@ -20,7 +20,7 @@ Stop for review after each phase.
 | Phase | Scope                                                                                                                       | Status      |
 | ----- | --------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | M0    | Docs and repo prep: CLAUDE.md, DESIGN, TECHARCH, workplan, README, license, gitleaks (secrets + URL guard), CI              | Done        |
-| M1    | Spike: check every TECHARCH "WebView2 requirement" with `NativeWebView`; video-only on a local test page; 12 cells measured | Not started |
+| M1    | Spike: check every TECHARCH "WebView2 requirement" with `NativeWebView`; video-only on a local test page; 12 cells measured | Done        |
 | M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Not started |
 | M3    | One cell: shared environment, sign-in window, video-only and audio scripts, control panel stream list (masked), demo site   | Not started |
 | M4    | The grid: N x M walls, monitors, presets, cell strips, expand, drag-to-swap, global hotkeys, 12-cell measurement            | Not started |
@@ -29,20 +29,22 @@ Stop for review after each phase.
 
 ### M1 spike checklist
 
-Run in `Spikes/` (throwaway, opts out of central packages as in RingView) with
-local test pages only. Record each result with a date under "Spike results".
+`Spikes/StreamWall.WebViewSpike` (throwaway, opts out of central packages as
+in RingView) runs against a local fake site under `example.invalid` only.
+Generate its clip with `Spikes/gen-media.sh`, then run the exe with
+`--mode checks` or `--mode load --cells 12 --flags all|autoplay|none --occlude`.
+Cells are muted by WebView2 unless `--audible` is given.
 
-- [ ] `NativeWebView` exposes: environment options (user-data folder, browser
-      arguments), `NewWindowRequested`, `ProcessFailed`, password
-      autosave/autofill settings, document-created scripts in all frames, web
-      messages, selective `ClearBrowsingDataAsync`.
-- [ ] Two web views on one environment share cookies.
-- [ ] Video-only styling works for: one video, several videos, a
-      cross-origin iframe video, a page that swaps its video element.
-- [ ] 12 cells playing: CPU, GPU, RAM measured; hardware decode confirmed.
-- [ ] Playback with the app unfocused, occluded, and behind a borderless
-      fullscreen app on another monitor; EcoQoS checked.
-- [ ] Decision: `NativeWebView` or direct `Microsoft.Web.WebView2` hosting.
+- [x] Every WebView2 requirement is reachable (see results: Avalonia for
+      hosting and environment options, the WebView2 SDK for the rest).
+- [x] Web views on one environment share one browser process and cookies.
+- [x] Video-only works for one video, several videos, a cross-origin iframe
+      player, and a page that re-creates its video element.
+- [x] 12 cells playing: CPU, GPU, RAM measured; hardware decode confirmed.
+- [x] Playback unfocused and fully covered by a topmost borderless window.
+- [ ] EcoQoS / Efficiency mode over long runs, and a real game on another
+      monitor: carried into M5 (needs the user's machine and a soak).
+- [x] Decision: hybrid (below).
 
 ### What we know about the target site
 
@@ -78,7 +80,49 @@ With streams configured in the app by the user:
 
 ### Spike results (M1)
 
-None yet.
+- **2026-11-13 - Hybrid hosting works.** Avalonia.Controls.WebView 12.1.2 on
+  Avalonia 12.1.6 hosts WebView2 (runtime 157.0.4341.46).
+  `EnvironmentRequested` (as `WindowsWebView2EnvironmentRequestedEventArgs`)
+  sets the user-data folder and browser arguments; `AdapterCreated` gives an
+  `IWindowsWebView2PlatformHandle`, and
+  `CoreWebView2.CreateFromComICoreWebView2` (Microsoft.Web.WebView2
+  1.0.4314.35) wraps it for everything else: profile password autosave and
+  autofill off (read back false), document-created scripts (they run in
+  cross-origin iframes too), `FrameCreated` + per-frame web messages,
+  `NewWindowRequested` (both Avalonia's and the SDK's fire; `window.open` and
+  `target=_blank` blocked), `ProcessFailed`, `IsMuted`, selective
+  `ClearBrowsingDataAsync`, `CapturePreviewAsync`, and virtual host mapping
+  for the demo site (`*.example.invalid` works). Avalonia cannot be handed an
+  SDK-created environment without reflection, so `IsCustomCrashReportingEnabled`
+  is not settable; M6 deletes local crash dumps under the profile instead.
+- **2026-11-13 - Capability checks (8 cells, one per test page) all pass.**
+  One browser process for all cells; a cookie set in one cell is seen by a cell
+  created 6 s later, and survives `ClearBrowsingDataAsync` (history, disk cache,
+  downloads, autofill, password data) plus a reload. Volume is enforced against
+  a player that restores its own volume (configured 0.25-0.6, read back
+  exactly). Signed-out detection works by URL pattern on `NavigationStarting`
+  and by selector in the probe. A renderer killed via DevTools `Page.crash`
+  raised `ProcessFailed` (RenderProcessExited); `Reload()` had video playing
+  again 3 s later. The interactive toggle shows the full page and returns to
+  video-only.
+- **2026-11-13 - Bug found and fixed in video-only:** re-picking the target
+  after load measured the already-fullscreen target at viewport size, so a
+  larger chat iframe won. `pick()` now measures with the takeover class off.
+- **2026-11-13 - 12 cells of 1080p30 H.264 (4.5 Mbps), 4x3 in 1280x720, 32
+  logical CPUs, 144 Hz display:** every cell at 1.00x real time with 0 dropped
+  frames out of ~6,800 per 20 s phase, in all phases: focused, unfocused (another
+  window active), and fully covered by a topmost borderless window. The page
+  stayed `visible` and timers held 1 Hz throughout. GPU video-decode engine
+  ~40% (hardware decode confirmed), 3D ~2.5%, ~1.1-1.3 GB private memory across
+  18 processes, CPU 0.5-4 cores (noisy, and it includes the spike's own
+  GPU-counter sampling; measure properly in M4). With only the autoplay flag,
+  results were the same: the three anti-throttling flags made no measurable
+  difference here. Keep them (they cost nothing) and re-check on long runs.
+- **2026-11-13 - Build notes for M2:** an `app.manifest` declaring Windows
+  10/11 support is required (without it Avalonia throws "Unable to create
+  child window for native control host"). The WebView2 package references its
+  WPF assembly, producing MSB3277 (WindowsBase conflict); strip that reference
+  in the real projects so warnings-as-errors stays clean.
 
 ### Open questions
 
@@ -90,6 +134,14 @@ None yet.
   repo's releases), or only build locally with `Scripts/pack.sh`? Decide by M6.
 
 ### Decisions log
+
+- **2026-11-13** - Web views are hosted by Avalonia's `NativeWebView` and
+  driven through the official WebView2 SDK wrapped around its COM pointer
+  (M1 results). Not direct WebView2 hosting: Avalonia already handles the
+  child-window hosting, layout and DPI, and nothing needed is missing.
+- **2026-11-13** - Spike and demo media are silent by default (host-muted;
+  `--audible` to hear them) and use a quiet tone, after the first runs played a
+  loud 440 Hz tone from 12 cells.
 
 - **2026-11-13** - MIT license (personal use, not distributed). No push to
   GitHub until CI is in place; CI now runs gitleaks over the full history,

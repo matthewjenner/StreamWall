@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Demo popup</title><link rel="stylesheet" href="/site.css">
+<script src="/fakeplayer.js"></script></head>
+<body>
+<header>This page tries to open a new window</header>
+<div class="layout"><div class="main"><div id="player-host"></div></div></div>
+<a id="out" href="/single.html" target="_blank">open</a>
+<script>
+  FakePlayer.mount(document.getElementById('player-host'));
+  setTimeout(() => { window.open('/single.html', '_blank'); }, 3000);
+  setTimeout(() => { document.getElementById('out').click(); }, 4000);
+</script>
+</body></html>

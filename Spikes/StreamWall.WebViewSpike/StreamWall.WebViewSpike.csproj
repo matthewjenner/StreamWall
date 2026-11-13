@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    M1 spike: Avalonia NativeWebView hosting WebView2, wrapped with the official WebView2 SDK
+    (CoreWebView2.CreateFromComICoreWebView2) for the APIs Avalonia does not surface. Runs
+    against a local fake site under example.invalid only. See Docs/workplan.md, "M1 spike".
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.2" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\*.js" LogicalName="%(Filename)%(Extension)" />
+    <None Include="TestSite\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

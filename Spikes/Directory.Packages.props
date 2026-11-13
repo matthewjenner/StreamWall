@@ -1,0 +1,9 @@
+<Project>
+  <!--
+    Spikes are throwaway proofs, not product code: they pin their own package versions in their
+    csproj and opt out of the repo's central package management (as in RingView).
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
