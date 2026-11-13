@@ -29,6 +29,12 @@ public sealed class VelopackUpdater : IUpdater
 
     public bool IsInstalled => _manager?.IsInstalled ?? false;
 
+    /// <summary>
+    /// Whether this process is the Velopack-installed copy (no network). Every other run - Debug or
+    /// Release from the repo, <c>artifacts/publish</c> - is a dev copy with its own data.
+    /// </summary>
+    public static bool IsRunningInstalled() => new VelopackUpdater().IsInstalled;
+
     public async Task<string?> CheckAsync(CancellationToken cancellationToken)
     {
         if (_manager is null)

@@ -32,7 +32,7 @@ public sealed partial class App : Application
                 AppConfig demo = AppHost.DemoConfig();
                 seed = demo with { Walls = [.. demo.Walls.Select(w => w with { Fullscreen = false })] };
             }
-            AppHost host = AppArgs.Demo ? AppHost.CreateDemo(seed) : AppHost.CreateReal(dev: Program.IsDevBuild);
+            AppHost host = AppArgs.Demo ? AppHost.CreateDemo(seed) : AppHost.CreateReal(dev: Program.IsDevCopy);
             _host = host;
             WallManager walls = new(host);
             _walls = walls;

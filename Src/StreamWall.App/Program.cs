@@ -10,15 +10,11 @@ internal static class Program
     public static SingleInstance? Instance { get; private set; }
 
     /// <summary>
-    /// Debug builds are dev copies: their own data folders (<see cref="AppPaths"/>) and single-instance
-    /// names, so they run next to the installed app without touching it.
+    /// Only the Velopack-installed copy uses the real data. Every run from the repo (Debug or
+    /// Release, <c>artifacts/publish</c>) is a dev copy: its own data folders (<see cref="AppPaths"/>)
+    /// and single-instance names, so it runs next to the installed app without touching it.
     /// </summary>
-    public static bool IsDevBuild =>
-#if DEBUG
-        true;
-#else
-        false;
-#endif
+    public static bool IsDevCopy { get; private set; } = true;
 
     // Nothing that needs Avalonia or a SynchronizationContext before StartWithClassicDesktopLifetime.
     [STAThread]
@@ -28,12 +24,13 @@ internal static class Program
         VelopackApp.Build().Run();
 
         AppArgs.Parse(args);
+        IsDevCopy = !VelopackUpdater.IsRunningInstalled();
 
-        // One StreamWall at a time (per build kind): a second launch shows the running control
-        // panel instead. Demo runs touch no real data, so they skip the guard.
+        // One StreamWall at a time (installed and dev each): a second launch shows the running
+        // control panel instead. Demo runs touch no real data, so they skip the guard.
         if (!AppArgs.Demo)
         {
-            Instance = SingleInstance.ForThisBuild(debug: IsDevBuild);
+            Instance = SingleInstance.ForThisBuild(debug: IsDevCopy);
             if (!Instance.TryAcquire())
             {
                 Instance.SignalActivate();

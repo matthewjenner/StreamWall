@@ -233,6 +233,12 @@ With streams configured in the app by the user:
 
 ### Decisions log
 
+- **2026-11-13** - "Dev copy" means "not the Velopack-installed copy" (decided
+  at startup by `IsInstalled`), not "Debug build" (v0.1.2). A Release build run
+  from the repo or `artifacts/publish` would otherwise have used the installed
+  app's config and profile. Only the installed copy touches `StreamWall\App` and
+  `StreamWallData\WebView`; development works only with dev data.
+
 - **2026-11-13** - Browser profiles moved to `%LOCALAPPDATA%\StreamWallData\`
   (v0.1.1). They were under `%LOCALAPPDATA%\StreamWall`, which is Velopack's
   per-user install folder: v0.1.0's installer refused to install ("already

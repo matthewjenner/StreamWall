@@ -9,8 +9,8 @@ namespace StreamWall.Platform;
 /// <remarks>
 /// Session-local names (no <c>Global\</c>), so each Windows user gets their own. A mutex left
 /// by a crash is abandoned, and <see cref="AbandonedMutexException"/> hands it to the next
-/// launch. Debug builds use different names (see <see cref="ForThisBuild"/>) so a dev build can
-/// run next to the installed app.
+/// launch. Dev copies (anything not Velopack-installed) use different names (see
+/// <see cref="ForThisBuild"/>) so they run next to the installed app.
 /// </remarks>
 public sealed class SingleInstance(string mutexName, string pipeName) : IDisposable
 {

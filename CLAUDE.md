@@ -129,11 +129,14 @@ Directory.Packages.props   Central package versions (check nuget.org before addi
   must be created with identical environment options (user-data folder and
   browser arguments), or creation fails. That shared profile is what makes one
   sign-in authenticate every cell.
-- **Dev and installed copies are separate.** Debug builds (dev runs) use
-  `%APPDATA%\StreamWall\Dev` and `%LOCALAPPDATA%\StreamWallData\DevWebView`, and
-  their own single-instance names, so they run next to the installed app
-  (Release, `StreamWall\App` + `StreamWallData\WebView`) without sharing config,
-  logs or session. Tail the dev log at `%APPDATA%\StreamWall\Dev\logs\streamwall.log`.
+- **Dev and installed copies are separate.** Only the Velopack-installed copy
+  uses `StreamWall\App` + `StreamWallData\WebView`. Every run from the repo -
+  Debug or Release, `artifacts/publish` - is a dev copy (decided at startup by
+  Velopack's `IsInstalled`, not by build configuration): `%APPDATA%\StreamWall\Dev`,
+  `%LOCALAPPDATA%\StreamWallData\DevWebView`, its own single-instance names, and
+  "(dev)" in the title. **Work only with dev data:** tail
+  `%APPDATA%\StreamWall\Dev\logs\streamwall.log`, never the installed copy's log
+  unless the user asks, and never its config or profile.
 - **Updates only act in an installed copy** (Velopack `IsInstalled`); dev, demo
   and `artifacts/publish` runs show no update banner. A downloaded update
   installs on quit (or "Restart and install" in the banner).

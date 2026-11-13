@@ -13,8 +13,9 @@ namespace StreamWall.Platform;
 /// v0.1.0 would not install). <c>AppPathsTests</c> pins this.
 /// </para>
 /// <para>
-/// Debug builds use <c>StreamWall\Dev</c> and <c>StreamWallData\DevWebView</c> instead, so a dev
-/// run next to the installed app never shares (and overwrites) its config or browser profile.
+/// Dev copies - every run that is not the Velopack-installed one (Debug or Release from the repo,
+/// artifacts/publish) - use <c>StreamWall\Dev</c> and <c>StreamWallData\DevWebView</c> instead, so
+/// they never share (and overwrite) the installed app's config or browser profile.
 /// </para>
 /// </remarks>
 public sealed class AppPaths(string root, string webViewRoot)
