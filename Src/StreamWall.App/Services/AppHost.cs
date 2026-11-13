@@ -51,8 +51,7 @@ public sealed class AppHost : IDisposable
     /// <summary>Memory-only config and log; the demo site; a demo-only WebView2 profile, never the real one.</summary>
     public static AppHost CreateDemo(AppConfig? seed = null)
     {
-        string demoProfile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StreamWall", "DemoWebView");
+        string demoProfile = AppPaths.DemoWebView;
         return new AppHost(new MemoryConfigStore(ConfigDocument.Serialize(seed ?? DemoConfig())), new MemoryDiagSink(),
             new WebEnvironment(demoProfile, demo: true), new NotInstalled(), demo: true, dev: false, ownedSink: null);
     }

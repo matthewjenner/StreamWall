@@ -82,7 +82,8 @@ thread**: CellHost feeds them events, and their timers use the injected
 ## WebView2 requirements (all verified in M1 except where noted)
 
 - **One environment:** a single user-data folder
-  (`%LOCALAPPDATA%\StreamWall\WebView`) and one set of browser arguments for
+  (`%LOCALAPPDATA%\StreamWallData\WebView`; never under `%LOCALAPPDATA%\StreamWall`, which is
+  Velopack's install folder) and one set of browser arguments for
   every cell and the Browser tab, so cookies are shared.
 - **Browser arguments** against background throttling (each verified to have
   an effect in WebView2): `--autoplay-policy=no-user-gesture-required`,

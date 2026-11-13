@@ -116,7 +116,7 @@ public sealed class AppPathsTests
 
         paths.Config.Should().Be(Path.Combine(roaming, "StreamWall", "App", "config.dat"));
         paths.Logs.Should().Be(Path.Combine(roaming, "StreamWall", "App", "logs"));
-        paths.WebView.Should().Be(Path.Combine(local, "StreamWall", "WebView"));
+        paths.WebView.Should().Be(Path.Combine(local, "StreamWallData", "WebView"));
         paths.Root.Should().NotStartWith(AppContext.BaseDirectory);
     }
 
@@ -129,5 +129,23 @@ public sealed class AppPathsTests
         dev.Logs.Should().NotBe(installed.Logs);
         dev.WebView.Should().NotBe(installed.WebView);
         dev.Root.Should().EndWith(Path.Combine("StreamWall", "Dev"));
+    }
+
+    /// <summary>
+    /// Velopack installs into %LOCALAPPDATA%\StreamWall and deletes it on uninstall; data there
+    /// would block the install and be wiped with the app (v0.1.0 would not install because of it).
+    /// </summary>
+    [Fact]
+    public void NoDataLivesInVelopacksInstallFolder()
+    {
+        string install = AppPaths.InstallRoot + Path.DirectorySeparatorChar;
+        IEnumerable<string> data =
+        [
+            AppPaths.ForCurrentUser().Root, AppPaths.ForCurrentUser().WebView,
+            AppPaths.ForCurrentUser(dev: true).Root, AppPaths.ForCurrentUser(dev: true).WebView,
+            AppPaths.DemoWebView,
+        ];
+        data.Should().AllSatisfy(p => (p + Path.DirectorySeparatorChar).Should().NotStartWith(install));
+        AppPaths.InstallRoot.Should().Be(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StreamWall"));
     }
 }

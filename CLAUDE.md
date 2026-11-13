@@ -34,7 +34,7 @@ published".
 - **Nothing site-specific is hard-coded.** Every URL and selector
   is captured from the Browser tab or entered by the user in the app at runtime.
 - **Never open, read or parse** the encrypted config (`%APPDATA%\StreamWall\App\config.dat`)
-  or the WebView2 profile (`%LOCALAPPDATA%\StreamWall\WebView`) from tools.
+  or the WebView2 profiles (`%LOCALAPPDATA%\StreamWallData\`) from tools.
   The log files are safe to read: they are redacted and pseudonymized by design.
 - **Sites appear only as pseudonyms** (`site-7f3a9c`) and streams as cell
   index + stream pseudonym (`cell 3 stream-1b2c4d`). User-given labels are
@@ -130,9 +130,9 @@ Directory.Packages.props   Central package versions (check nuget.org before addi
   browser arguments), or creation fails. That shared profile is what makes one
   sign-in authenticate every cell.
 - **Dev and installed copies are separate.** Debug builds (dev runs) use
-  `%APPDATA%\StreamWall\Dev` and `%LOCALAPPDATA%\StreamWall\DevWebView`, and
+  `%APPDATA%\StreamWall\Dev` and `%LOCALAPPDATA%\StreamWallData\DevWebView`, and
   their own single-instance names, so they run next to the installed app
-  (Release, `StreamWall\App` + `StreamWall\WebView`) without sharing config,
+  (Release, `StreamWall\App` + `StreamWallData\WebView`) without sharing config,
   logs or session. Tail the dev log at `%APPDATA%\StreamWall\Dev\logs\streamwall.log`.
 - **Updates only act in an installed copy** (Velopack `IsInstalled`); dev, demo
   and `artifacts/publish` runs show no update banner. A downloaded update

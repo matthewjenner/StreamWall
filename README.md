@@ -40,7 +40,8 @@ installs per user (no admin prompt) and keeps itself up to date: it checks for a
 shortly after launch and hourly, downloads it in the background, and installs it when you quit
 (or right away from the banner's "Restart and install"). Builds are not code-signed, so Windows
 SmartScreen may ask you to confirm the first install. Data lives in `%APPDATA%\StreamWall\App`
-(encrypted config, logs) and `%LOCALAPPDATA%\StreamWall\WebView` (the browser profile).
+(encrypted config, logs) and `%LOCALAPPDATA%\StreamWallData\WebView` (the browser profile;
+deliberately outside the install folder, so uninstalling keeps your session).
 
 ## Releasing
 

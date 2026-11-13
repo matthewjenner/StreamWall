@@ -200,7 +200,7 @@ With streams configured in the app by the user:
   video-only script applies (and re-applies when the player fights back).
 - `--demo` serves `Src/StreamWall.App/Web/DemoSite` (canvas-drawn silent video,
   no media files) on `demo.example.invalid` with a demo-only WebView2 profile
-  (`%LOCALAPPDATA%\StreamWall\DemoWebView`). `--demo --screenshot <folder>`
+  (`%LOCALAPPDATA%\StreamWallData\DemoWebView`). `--demo --screenshot <folder>`
   sends a stream through the real Send to wall path, saves PNGs of every cell,
   the Browser page and the Walls tab, and quits; its wall is windowed so it
   never covers the monitor. First run (2026-11-13): all four cells "playing",
@@ -233,12 +233,20 @@ With streams configured in the app by the user:
 
 ### Decisions log
 
+- **2026-11-13** - Browser profiles moved to `%LOCALAPPDATA%\StreamWallData\`
+  (v0.1.1). They were under `%LOCALAPPDATA%\StreamWall`, which is Velopack's
+  per-user install folder: v0.1.0's installer refused to install ("already
+  installed") and an uninstall would have deleted the signed-in profile. The
+  existing profile was moved by hand on the dev machine; v0.1.0 should not be
+  installed. `NoDataLivesInVelopacksInstallFolder` pins the rule. (RingView
+  avoided this by keeping its data under `%APPDATA%`.)
+
 - **2026-11-13** - Release early: v0.1.0 ships after M3 (not after M6) so an
   installed copy can run while development continues, and the updater gets
   exercised from the start. Milestones continue as 0.x releases; bump when a
   user-visible change is ready. Velopack, the release workflow, `pack.sh` and
   the single-instance guard come from RingView. Debug builds are dev copies
-  with their own data folders (`StreamWall\Dev`, `StreamWall\DevWebView`) and
+  with their own data folders (`StreamWall\Dev`, `StreamWallData\DevWebView`) and
   single-instance names, so they never share config or session with the
   installed app; the installed copy keeps `StreamWall\App` (where the first
   real-site config already lives). No icon yet: the installer uses Velopack's

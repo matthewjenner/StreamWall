@@ -54,7 +54,7 @@ internal sealed record SpikeOptions
     public string ReportDir { get; init; } = Path.Combine(Path.GetTempPath(), "StreamWallSpike");
 
     public static string UserDataFolder => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StreamWall", "Spike", "WebView");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StreamWallData", "Spike", "WebView");
 
     public string BrowserArguments => Flags switch
     {
