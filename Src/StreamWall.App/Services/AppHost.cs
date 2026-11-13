@@ -3,6 +3,7 @@ using StreamWall.App.Web;
 using StreamWall.Core.Config;
 using StreamWall.Core.Diagnostics;
 using StreamWall.Core.Presentation;
+using StreamWall.Core.Updates;
 using StreamWall.Platform;
 
 namespace StreamWall.App.Services;
@@ -20,9 +21,10 @@ public sealed class AppHost : IDisposable
     private CancellationTokenSource? _pendingSave;
     private Task _saving = Task.CompletedTask;
 
-    private AppHost(IConfigStore store, IDiagSink sink, WebEnvironment web, bool demo, IDisposable? ownedSink)
+    private AppHost(IConfigStore store, IDiagSink sink, WebEnvironment web, IUpdater updater, bool demo, bool dev, IDisposable? ownedSink)
     {
         Demo = demo;
+        Dev = dev;
         Sink = sink;
         Web = web;
         _ownedSink = ownedSink;
@@ -30,13 +32,20 @@ public sealed class AppHost : IDisposable
         Log = new DiagLog(sink, new LogRedactor(Pseudonymizer.Ephemeral()));
         Store = store;
         Repository = new ConfigRepository(store, Log);
+        Updates = new UpdateService(updater, TimeProvider.System, Log);
+        Updates.StateChanged += s => UpdateChanged?.Invoke(s);
     }
 
-    public static AppHost CreateReal()
+    /// <summary>
+    /// The user's app: DPAPI config, log file, WebView2 profile, Velopack updates. A dev (Debug)
+    /// build uses its own data folders so it can run next to the installed copy.
+    /// </summary>
+    public static AppHost CreateReal(bool dev)
     {
-        AppPaths paths = AppPaths.ForCurrentUser();
+        AppPaths paths = AppPaths.ForCurrentUser(dev);
         var sink = new FileDiagSink(paths.Logs);
-        return new AppHost(new DpapiConfigStore(paths.Config), sink, new WebEnvironment(paths.WebView, demo: false), demo: false, ownedSink: sink);
+        return new AppHost(new DpapiConfigStore(paths.Config), sink, new WebEnvironment(paths.WebView, demo: false),
+            new VelopackUpdater(), demo: false, dev: dev, ownedSink: sink);
     }
 
     /// <summary>Memory-only config and log; the demo site; a demo-only WebView2 profile, never the real one.</summary>
@@ -45,10 +54,18 @@ public sealed class AppHost : IDisposable
         string demoProfile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StreamWall", "DemoWebView");
         return new AppHost(new MemoryConfigStore(ConfigDocument.Serialize(seed ?? DemoConfig())), new MemoryDiagSink(),
-            new WebEnvironment(demoProfile, demo: true), demo: true, ownedSink: null);
+            new WebEnvironment(demoProfile, demo: true), new NotInstalled(), demo: true, dev: false, ownedSink: null);
     }
 
     public bool Demo { get; }
+
+    /// <summary>A Debug build with its own data folders (see <see cref="CreateReal"/>).</summary>
+    public bool Dev { get; }
+
+    /// <summary>Velopack updates: disabled unless this is an installed copy.</summary>
+    public UpdateService Updates { get; }
+
+    public event Action<UpdateState>? UpdateChanged;
 
     public DiagLog Log { get; }
 
@@ -87,6 +104,8 @@ public sealed class AppHost : IDisposable
         Config = await Repository.LoadAsync();
         IsLoaded = true;
         ConfigChanged?.Invoke(Config);
+        // On the UI thread, so the update schedule posts back here.
+        Updates.Start();
     }
 
     /// <summary>
@@ -195,7 +214,11 @@ public sealed class AppHost : IDisposable
         };
     }
 
-    public void Dispose() => _ownedSink?.Dispose();
+    public void Dispose()
+    {
+        Updates.Dispose();
+        _ownedSink?.Dispose();
+    }
 }
 
 /// <summary>Demo/test config storage: plain memory, never disk.</summary>
@@ -234,4 +257,18 @@ internal sealed class MemoryDiagSink : IDiagSink
         lock (_gate)
             _lines.Add($"[{level}] {scope}: {message}");
     }
+}
+
+/// <summary>Demo and tests: nothing is installed, so updates are disabled.</summary>
+internal sealed class NotInstalled : IUpdater
+{
+    public bool IsInstalled => false;
+
+    public Task<string?> CheckAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+
+    public Task DownloadAsync(Action<int> progress, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public void ApplyAndRestart() { }
+
+    public void ApplyOnExit() { }
 }

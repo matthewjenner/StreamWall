@@ -31,6 +31,15 @@
             </StackPanel>
         </Border>
 
+        <Border DockPanel.Dock="Top" Name="UpdateBanner" Margin="16,0,16,8" Padding="12,6" CornerRadius="6"
+                Background="#1F3B82F6" IsVisible="{Binding Banner, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Name="InstallUpdateButton" Content="Restart and install" Classes="accent"
+                        Command="{Binding InstallUpdateCommand}" IsVisible="{Binding Banner.ShowInstall, FallbackValue=False}" />
+                <TextBlock Text="{Binding Banner.Text}" VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
         <TextBlock DockPanel.Dock="Bottom" Name="StatusText" Text="{Binding Status}" Margin="16,6,16,10" Opacity="0.7" />
 
         <Panel Margin="16,4,16,0">

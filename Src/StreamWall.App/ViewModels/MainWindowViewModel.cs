@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StreamWall.App.Services;
 using StreamWall.Core.Config;
+using StreamWall.Core.Presentation;
 
 namespace StreamWall.App.ViewModels;
 
@@ -22,8 +23,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(AppHost host)
     {
         _host = host;
-        Title = host.Demo ? "StreamWall (demo)" : "StreamWall";
-        Version = "v" + AppHost.Version;
+        Title = host.Demo ? "StreamWall (demo)" : host.Dev ? "StreamWall (dev)" : "StreamWall";
+        Version = "v" + AppHost.Version + (host.Dev ? " dev" : "");
+        host.UpdateChanged += s => Banner = UpdateBanner.From(s);
         Walls = new WallsPageViewModel(host);
         Streams = new StreamsPageViewModel(host, SendToWallAsync);
         Settings = new SettingsPageViewModel(host);
@@ -54,6 +56,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isLoading = true;
+
+    /// <summary>The update banner (found / downloading / ready / failed); null hides it.</summary>
+    [ObservableProperty]
+    private UpdateBanner? _banner;
+
+    /// <summary>Restart into a downloaded update now (otherwise it installs on quit).</summary>
+    [RelayCommand]
+    private void InstallUpdate() => _host.Updates.Install();
 
     [ObservableProperty]
     private string _status = "Loading...";

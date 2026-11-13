@@ -25,7 +25,7 @@ Stop for review after each phase.
 | M3    | Browser and walls: shared environment, Browser tab (sign-in), 1-3 wall windows with N x M grids and monitor choice, Send to wall picker across walls, clear, stream library, video-only and audio scripts, demo site | Done        |
 | M4    | Wall polish: presets, full cell strips, expand, drag-to-swap, always-on-top / borderless / saved bounds, global hotkeys, 12-cell measurement | Not started |
 | M5    | Resilience: cell watchdog (stall or no video -> reload with backoff), one "cells have no video" notice, Reload all, crash recovery, throttling verified | Not started |
-| M6    | Desktop and release: tray, single instance, profile hygiene, Velopack, release workflow, README numbers, v0.1.0             | Not started |
+| M6    | Desktop and release: tray, profile hygiene, README numbers (single instance, Velopack, release workflow and v0.1.0 done early) | In progress |
 
 ### M1 spike checklist
 
@@ -232,6 +232,17 @@ With streams configured in the app by the user:
   (M6).
 
 ### Decisions log
+
+- **2026-11-13** - Release early: v0.1.0 ships after M3 (not after M6) so an
+  installed copy can run while development continues, and the updater gets
+  exercised from the start. Milestones continue as 0.x releases; bump when a
+  user-visible change is ready. Velopack, the release workflow, `pack.sh` and
+  the single-instance guard come from RingView. Debug builds are dev copies
+  with their own data folders (`StreamWall\Dev`, `StreamWall\DevWebView`) and
+  single-instance names, so they never share config or session with the
+  installed app; the installed copy keeps `StreamWall\App` (where the first
+  real-site config already lives). No icon yet: the installer uses Velopack's
+  default until one is made.
 
 - **2026-11-13** - No sign-in configuration (user decision). Signing in is just
   the Browser tab, like any browser; the shared profile carries the session to

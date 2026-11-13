@@ -70,6 +70,18 @@ public sealed class DiagLog(IDiagSink sink, LogRedactor redactor)
         Emit(DiagLevel.Info, "Cell", F($"wall {wall} cell {cell}") + (stream is Guid id ? " " + redactor.Pseudonyms.Stream(id) : "")
             + (muted ? ": audio muted" : ": audio on") + F($" (volume {volume:0.00})"));
 
+    // Updates (Velopack, from RingView).
+
+    public void UpdatesDisabled() => Emit(DiagLevel.Info, "Updates", "auto-update disabled (not an installed build)");
+
+    public void UpdateFound(string version) => Emit(DiagLevel.Info, "Updates", "update v" + version + " available; downloading");
+
+    public void UpdateDownloaded(string version) => Emit(DiagLevel.Info, "Updates", "update v" + version + " downloaded; installs on quit");
+
+    public void UpdateFailed(string message) => Emit(DiagLevel.Warn, "Updates", "update check failed: " + message);
+
+    public void UpdateInstalling(string version) => Emit(DiagLevel.Info, "Updates", "restarting to install update v" + version);
+
     public void WebViewUnavailable(Exception error) => Emit(DiagLevel.Error, "Web", "web view could not start: " + error.Message);
 
 

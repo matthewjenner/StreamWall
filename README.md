@@ -4,8 +4,8 @@ An always-on Windows video wall for web video streams that need a sign-in:
 many streams tiled across one or more borderless windows, each cell showing
 only its video, all playing audio at once.
 
-> **Status: early development.** The project skeleton is in place; the wall itself is not built
-> yet. See [Docs/workplan.md](Docs/workplan.md).
+> **Status: early development (0.x).** The Browser tab, Send to wall and 1-3 wall windows work;
+> presets, recovery and the tray are next. See [Docs/workplan.md](Docs/workplan.md).
 
 ## Develop
 
@@ -31,6 +31,24 @@ in the app and stored encrypted for your Windows account (DPAPI). Logs and
 diagnostics never contain URLs, hosts or credentials: sites appear as stable
 pseudonyms such as `site-7f3a9c`. Browsing history and cache are cleared
 regularly; your signed-in session is kept. No telemetry.
+
+## Install
+
+Download `StreamWall-win-Setup.exe` from the
+[latest release](https://github.com/matthewjenner/StreamWall/releases/latest) and run it. It
+installs per user (no admin prompt) and keeps itself up to date: it checks for a new release
+shortly after launch and hourly, downloads it in the background, and installs it when you quit
+(or right away from the banner's "Restart and install"). Builds are not code-signed, so Windows
+SmartScreen may ask you to confirm the first install. Data lives in `%APPDATA%\StreamWall\App`
+(encrypted config, logs) and `%LOCALAPPDATA%\StreamWall\WebView` (the browser profile).
+
+## Releasing
+
+`<VersionPrefix>` in `Directory.Build.props` is the single source of truth. Bump it with
+`./Scripts/bump-version.sh [Major|Minor|Patch]`, commit, and push to `main`. CI publishes a
+[Velopack](https://velopack.io) release to this repo only if that version has not been
+released yet, so a push without a bump is a no-op. `./Scripts/pack.sh` builds the same
+installer locally.
 
 ## Requirements
 

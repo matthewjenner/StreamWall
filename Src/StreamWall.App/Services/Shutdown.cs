@@ -23,6 +23,8 @@ public static class Shutdown
             try
             {
                 await host.FlushAsync();
+                // A downloaded update installs once this process has exited.
+                host.Updates.OnQuit();
             }
             finally
             {

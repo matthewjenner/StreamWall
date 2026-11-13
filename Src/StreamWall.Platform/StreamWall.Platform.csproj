@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Windows services for the app: the DPAPI config store, the log file and data paths. Implements
-    Core's IConfigStore and IDiagSink. Single instance and the updater join in M6.
+    Core's IConfigStore, IDiagSink and IUpdater; single instance.
   -->
   <PropertyGroup>
     <TargetFramework>$(StreamWallWindowsTfm)</TargetFramework>
@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>

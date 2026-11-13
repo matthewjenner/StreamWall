@@ -119,4 +119,15 @@ public sealed class AppPathsTests
         paths.WebView.Should().Be(Path.Combine(local, "StreamWall", "WebView"));
         paths.Root.Should().NotStartWith(AppContext.BaseDirectory);
     }
+
+    [Fact]
+    public void DevBuildsNeverShareTheInstalledAppsData()
+    {
+        AppPaths installed = AppPaths.ForCurrentUser();
+        AppPaths dev = AppPaths.ForCurrentUser(dev: true);
+        dev.Config.Should().NotBe(installed.Config);
+        dev.Logs.Should().NotBe(installed.Logs);
+        dev.WebView.Should().NotBe(installed.WebView);
+        dev.Root.Should().EndWith(Path.Combine("StreamWall", "Dev"));
+    }
 }
