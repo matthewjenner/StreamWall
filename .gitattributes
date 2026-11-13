@@ -1,0 +1,23 @@
+# Normalize line endings: keep LF in the repo, let Git handle the working tree.
+* text=auto eol=lf
+
+# Scripts must stay LF even when checked out on Windows (run via bash/sh).
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+# Windows-only batch/PowerShell stay CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Treat these as binary - never normalize or diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.webm binary
+*.pfx binary
+*.p12 binary
+*.dat binary

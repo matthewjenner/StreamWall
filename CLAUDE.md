@@ -1,0 +1,128 @@
+# CLAUDE.md
+
+Guidance for working in this repo. `Docs/` holds the design, the architecture,
+and the work plan (living tracker + decisions log). This file is the quick
+orientation - read it first, and read **Privacy** before touching anything.
+
+## What this is
+
+StreamWall - a Windows app that shows many signed-in web video streams at once
+as an always-on video wall. One or more borderless windows ("walls") each hold
+a grid of cells; each cell is an embedded WebView2 trimmed to a single
+`<video>`. It replaces opening ~12 browser tabs on a site that needs a login
+and starting Picture-in-Picture in each one.
+
+It is **.NET 10 + Avalonia 12**, following Klakr's layout and the standards of
+Updatr and RingView (the newest local apps), released with Velopack from this
+**public** repo. `Docs/workplan.md` has the phases and decisions.
+
+Status: **pre-code.** M0 (docs) is in progress; nothing below `Src/` exists
+yet. Layout and commands describe the target and are updated as each phase
+lands.
+
+## Privacy (non-negotiable)
+
+The site, its URLs, hosts, account names and credentials are **sensitive**.
+They must never appear in the repo, git history, logs, diagnostics, error
+text, or any AI transcript. The repo is public, so this also means "never
+published".
+
+- **Never ask for, guess, print or echo real URLs, domains or credentials.**
+  Code, tests, docs, samples and commit messages use placeholders under
+  `example.invalid` (e.g. `https://stream.example.invalid/view/1`).
+- **Nothing site-specific is hard-coded.** Every URL, selector and signed-out
+  pattern is entered by the user in the app's own UI at runtime.
+- **Never open, read or parse** the encrypted config (`%APPDATA%\StreamWall\App\config.dat`)
+  or the WebView2 profile (`%LOCALAPPDATA%\StreamWall\WebView`) from tools.
+  The log files are safe to read: they are redacted and pseudonymized by design.
+- **Sites appear only as pseudonyms** (`site-7f3a9c`) and streams as cell
+  index + stream pseudonym (`cell 3 stream-1b2c4d`). User-given labels are
+  never logged (users can type anything into a label).
+- **Review the UI with `--demo` screenshots, never the real wall.** Never
+  capture the real app's windows (they show the user's streams).
+- Diagnostics go through typed `DiagLog` methods, which redact; no free-form
+  log strings elsewhere. A URL-shaped string reaching a log is a bug.
+
+## Commands (target, from M2)
+
+```bash
+dotnet build StreamWall.slnx
+dotnet test --solution StreamWall.slnx    # MTP runner (global.json); conventions, unit, headless UI
+dotnet run --project Src/StreamWall.App   # the real app, your config
+dotnet run --project Src/StreamWall.App -- --demo                        # local demo site, no account
+dotnet run --project Src/StreamWall.App -- --demo --screenshot <folder>  # PNGs of the main screens
+./Scripts/run.sh [Debug|Release] [app args]     # clean, build, run
+./Scripts/pack.sh [folder]                      # local Velopack installer (needs vpk) -> artifacts/
+./Scripts/bump-version.sh [Major|Minor|Patch]   # edits Directory.Build.props only
+```
+
+Enable the pre-commit secret scan once per clone: `git config core.hooksPath .githooks`
+(runs gitleaks on staged changes; CI scans the full history).
+
+## Layout (target)
+
+```
+Src/StreamWall.Core/       Pure logic: config model + rules, walls/grids/presets, LogRedactor,
+                           Pseudonymizer, DiagLog, StallWatchdog, SignedOutDetector,
+                           StartupStagger, UpdateService (over an IUpdater seam), and
+                           Presentation (CellDisplay: the strip's visual rules as data).
+                           net10.0, no packages, no P/Invoke (CorePurityConventionTests).
+Src/StreamWall.Platform/   Windows services: DPAPI config vault, AppPaths, log file, profile
+                           hygiene (selective data clearing), SingleInstance, VelopackUpdater.
+Src/StreamWall.App/        Avalonia app -> StreamWall.exe: AppHost (composition root, demo
+                           mode), WebView host + injected scripts, walls, cell strips, sign-in
+                           window, control panel, tray, screenshot mode, demo site.
+Tests/StreamWall.Core.Tests/     Unit, state-machine (fake time) and convention tests.
+Tests/StreamWall.Platform.Tests/ Vault round-trip (real DPAPI), log file, temp folders.
+Tests/StreamWall.App.Tests/      Headless UI tests of the control panel (UiHarness pattern).
+Scripts/                   run, pack, bump-version, gen-icons.
+Directory.Build.props      Version + shared Windows TFM.
+Directory.Packages.props   Central package versions (check nuget.org before adding/bumping).
+```
+
+## Conventions
+
+- **ASCII and US English** everywhere authored, enforced by
+  `AsciiConventionTests` / `UsEnglishConventionTests`. Build non-ASCII data
+  (the masking dot, status dots) from char codes.
+- **No real hosts in the tree**, enforced by `UrlAllowlistConventionTests`:
+  any URL whose host is not on the allowlist (`example.invalid`, `*.example`,
+  and named build/docs hosts) fails the build's tests.
+- **Update `Docs/` in the same change** as the code it describes.
+- **Core is pure and clock-free.** State machines take an injected
+  `TimeProvider`; tests drive them with `FakeTimeProvider`.
+- **WebView2 is UI-thread bound.** Every web view call happens on the Avalonia
+  UI thread and is awaited; no `.Result`, `.Wait()` or `Thread.Sleep` on any
+  path the UI waits on.
+- **MVVM:** CommunityToolkit.Mvvm (`[ObservableProperty]`, `[RelayCommand]`),
+  compiled bindings, ViewModels never reference Views; visual rules live in
+  Core (`CellDisplay`), view models stay thin.
+- **Airspace:** native web views draw above Avalonia content, so nothing
+  renders over a cell. Per-cell controls live in a strip beside the cell, and
+  pointer input (drag-to-swap, double-click expand) happens on the strip.
+- **Injected scripts are embedded resources**, plain JS, idempotent (safe to
+  run twice), and never send URLs, titles or page text back to the host - only
+  structural facts (counts, booleans, `currentTime`).
+
+## Gotchas
+
+- **One WebView2 environment for everything.** Every cell and the sign-in
+  window must be created with identical environment options (user-data folder
+  and browser arguments), or creation fails. That shared profile is what makes
+  one sign-in authenticate every cell.
+- **Start with Windows and updates only act in an installed copy**
+  (Velopack `IsInstalled`); dev, demo and `artifacts/publish` runs show no
+  update banner.
+
+## Release
+
+Releases come from **this repo** with Velopack (`.github/workflows/release.yml`,
+mirroring RingView): on every push to `main` it reads `<VersionPrefix>` from
+`Directory.Build.props` and, if `v<version>` is not yet a release here, tests,
+publishes win-x64 self-contained, runs `vpk pack`, and creates the release.
+A push without a bump is a no-op; 0.0.0 never releases.
+
+Flow: `./Scripts/bump-version.sh [Major|Minor|Patch]` -> commit -> push. CI
+never bumps or commits. Check the published release before assuming a version
+is unshipped (`gh release view v<version>`): the workflow is idempotent on the
+version. Builds are unsigned (personal use), so SmartScreen may prompt.

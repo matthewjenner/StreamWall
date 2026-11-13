@@ -1,0 +1,40 @@
+# .NET packaging (Scripts/pack.sh, release.yml)
+artifacts/
+publish/
+Releases/
+
+# StreamWall data - NEVER commit. Config (DPAPI) lives in %APPDATA%\StreamWall\App and the
+# WebView2 profile in %LOCALAPPDATA%\StreamWall\WebView, never in the repo. These patterns
+# are a backstop in case a dev run ever points them at the working tree.
+config.dat
+*.dat
+*.WebView2/
+EBWebView/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.pfx
+*.p12
+*.key
+
+# Logs
+logs/
+*.log
+
+# Editor / OS
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+coverage/
+TestResults/
+
+# .NET build output
+bin/
+obj/
+*.user

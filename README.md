@@ -1,0 +1,36 @@
+# StreamWall
+
+An always-on Windows video wall for web video streams that need a sign-in:
+many streams tiled across one or more borderless windows, each cell showing
+only its video, all playing audio at once.
+
+> **Status: in design.** Nothing is built yet. See [Docs/workplan.md](Docs/workplan.md).
+
+## How it works
+
+Each cell is an embedded web view (WebView2) on one shared browser profile,
+trimmed down to its `<video>` element. You sign in once, by hand, in the app's
+sign-in window (including any 2FA), and every cell is signed in. StreamWall
+never sees, stores or automates your credentials.
+
+## Privacy
+
+Everything site-specific (stream URLs, the sign-in page, selectors) is entered
+in the app and stored encrypted for your Windows account (DPAPI). Logs and
+diagnostics never contain URLs, hosts or credentials: sites appear as stable
+pseudonyms such as `site-7f3a9c`. Browsing history and cache are cleared
+regularly; your signed-in session is kept. No telemetry.
+
+## Requirements
+
+- Windows 11 (or Windows 10 2004+), x64, with the WebView2 runtime (built into
+  Windows 11)
+- To build: the [.NET 10 SDK](https://dotnet.microsoft.com) (see `global.json`)
+
+## Known limitations
+
+- DRM-protected (Widevine) streams may not play in WebView2.
+
+## Docs
+
+[DESIGN](Docs/DESIGN.md) - [TECHARCH](Docs/TECHARCH.md) - [workplan](Docs/workplan.md)
