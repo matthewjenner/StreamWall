@@ -52,7 +52,7 @@ public sealed class ConfigRepository(IConfigStore store, DiagLog log)
             return await StartFreshAsync(cancellationToken);
         }
 
-        Apply(config);
+        Register(config);
         log.ConfigLoaded(config.Streams.Count);
         return config;
     }
@@ -61,7 +61,7 @@ public sealed class ConfigRepository(IConfigStore store, DiagLog log)
     {
         AppConfig normalized = ConfigRules.Normalize(config);
         // Register before writing: nothing about this config may reach a log unredacted.
-        Apply(normalized);
+        Register(normalized);
         try
         {
             await store.SaveAsync(ConfigDocument.Serialize(normalized), cancellationToken);
@@ -86,7 +86,7 @@ public sealed class ConfigRepository(IConfigStore store, DiagLog log)
     private async Task<AppConfig> StartFreshAsync(CancellationToken cancellationToken)
     {
         AppConfig fresh = ConfigRules.Normalize(new AppConfig());
-        Apply(fresh);
+        Register(fresh);
         try
         {
             return await SaveAsync(fresh, cancellationToken);
@@ -98,5 +98,6 @@ public sealed class ConfigRepository(IConfigStore store, DiagLog log)
         }
     }
 
-    private void Apply(AppConfig config) => log.Redactor.Reset(ConfigRules.PseudonymizerFor(config), config.Urls());
+    /// <summary>Makes the redactor hide every URL in <paramref name="config"/> (and use its key) from now on.</summary>
+    public void Register(AppConfig config) => log.Redactor.Reset(ConfigRules.PseudonymizerFor(config), config.Urls());
 }

@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Demo multi</title><link rel="stylesheet" href="/site.css">
+<script src="/fakeplayer.js"></script></head>
+<body>
+<header><a href="/index.html">All streams</a> Several videos: a preview, the main player, and an ad</header>
+<div class="layout">
+  <div id="preview-host"></div>
+  <div class="main"><div id="player-host"></div></div>
+  <div id="ad-host"></div>
+</div>
+<script>
+  FakePlayer.mount(document.getElementById('preview-host'), { width: 160, height: 90, muted: true, name: 'Preview', hue: 20 });
+  FakePlayer.mount(document.getElementById('player-host'), { name: 'Main player', hue: 140 });
+  FakePlayer.mount(document.getElementById('ad-host'), { width: 300, height: 250, muted: true, name: 'Ad', hue: 0 });
+</script>
+</body></html>

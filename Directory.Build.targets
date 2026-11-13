@@ -1,0 +1,13 @@
+<Project>
+  <!--
+    Microsoft.Web.WebView2 references its WPF and WinForms controls unconditionally, in every
+    project it flows into (the App and, transitively, its tests). StreamWall uses only Core
+    (wrapped around Avalonia's COM pointer). Dropping them avoids loading WPF's WindowsBase and
+    the MSB3277 version conflict it causes (found in M1).
+  -->
+  <Target Name="StreamWallDropWebView2UiReferences" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Wpf' Or '%(Filename)' == 'Microsoft.Web.WebView2.WinForms'" />
+    </ItemGroup>
+  </Target>
+</Project>

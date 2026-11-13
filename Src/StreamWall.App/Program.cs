@@ -24,12 +24,21 @@ internal static class Program
 }
 
 /// <summary>
-/// Command-line switches, all for development: <c>--demo</c> runs with in-memory storage and
-/// placeholder streams, never the real config.
+/// Command-line switches, all for development: <c>--demo</c> runs against the local demo site with
+/// in-memory config and a demo-only browser profile, never the real ones; <c>--screenshot
+/// &lt;folder&gt;</c> (with <c>--demo</c>) drives Send to wall, saves PNGs and quits.
 /// </summary>
 internal static class AppArgs
 {
     public static bool Demo { get; private set; }
 
-    public static void Parse(string[] args) => Demo = args.Contains("--demo");
+    public static string? ScreenshotFolder { get; private set; }
+
+    public static void Parse(string[] args)
+    {
+        Demo = args.Contains("--demo");
+        int shot = Array.IndexOf(args, "--screenshot");
+        if (Demo && shot >= 0 && shot + 1 < args.Length)
+            ScreenshotFolder = args[shot + 1];
+    }
 }

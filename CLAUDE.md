@@ -16,10 +16,10 @@ It is **.NET 10 + Avalonia 12**, following Klakr's layout and the standards of
 Updatr and RingView (the newest local apps), released with Velopack from this
 **public** repo. `Docs/workplan.md` has the phases and decisions.
 
-Status: **M2 (scaffold) done.** Core, Platform and App build with zero
-warnings; the App is a control-panel shell. Web views, walls and the demo
-site arrive in M3/M4 (see `Docs/workplan.md`). The M1 spike lives in
-`Spikes/StreamWall.WebViewSpike`.
+Status: **M3 (Browser and walls) done.** The control panel (Walls / Browser /
+Streams / Settings), 1-3 wall windows, Send to wall with the picker, and the
+demo site work. Next: M4 wall polish, M5 resilience (see `Docs/workplan.md`).
+The M1 spike lives in `Spikes/StreamWall.WebViewSpike`.
 
 ## Privacy (non-negotiable)
 
@@ -50,14 +50,16 @@ published".
 dotnet build StreamWall.slnx
 dotnet test --solution StreamWall.slnx    # MTP runner (global.json); conventions, unit, headless UI
 dotnet run --project Src/StreamWall.App   # the real app, your config
-dotnet run --project Src/StreamWall.App -- --demo   # memory-only config and log, placeholder streams
+dotnet run --project Src/StreamWall.App -- --demo   # demo site, memory-only config/log, demo-only profile
+dotnet run --project Src/StreamWall.App -- --demo --screenshot <folder>  # Send to wall, PNGs, quit
 ./Scripts/run.sh [Debug|Release] [app args]     # clean, build, run
 ./Scripts/bump-version.sh [Major|Minor|Patch]   # edits Directory.Build.props only
 ./Spikes/gen-media.sh                           # the spike's synthetic clip (needs ffmpeg)
 ```
 
-Coming later: `--demo` serving the local demo site and `--screenshot <folder>`
-(M3), `./Scripts/pack.sh` (M6).
+Coming later: `./Scripts/pack.sh` (M6). Headless UI tests cannot run WebView2,
+so anything involving cells or the Browser is checked with `--demo --screenshot`
+and by reading the PNGs (demo pages only, never the real app).
 
 Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
 (runs gitleaks on staged changes: secrets, plus any URL whose host is not on the
@@ -66,17 +68,19 @@ Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
 ## Layout
 
 ```
-Src/StreamWall.Core/       Pure logic. Now: Config (AppConfig, ConfigRules, ConfigDocument,
-                           ConfigRepository + IConfigStore), Diagnostics (DiagLog, LogRedactor,
-                           Pseudonymizer), Presentation (UrlMask). Later: walls/presets,
-                           StallWatchdog, SignedOutDetector, StartupStagger, CellDisplay.
+Src/StreamWall.Core/       Pure logic. Now: Config (AppConfig, WallConfig, WallLayout, ConfigRules,
+                           ConfigDocument, ConfigRepository + IConfigStore), Diagnostics (DiagLog,
+                           LogRedactor, Pseudonymizer), Presentation (UrlMask, WallMap). Later:
+                           presets, StallWatchdog, SignedOutDetector, CellDisplay.
                            net10.0, no packages, no P/Invoke (CorePurityConventionTests).
 Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, atomic, sets an
                            unreadable file aside), FileDiagSink, AppPaths. Later: profile
                            hygiene, SingleInstance, VelopackUpdater.
-Src/StreamWall.App/        Avalonia app -> StreamWall.exe. Now: AppHost (composition root, real
-                           or --demo with memory stores), the control-panel shell. Later: web view
-                           host + injected scripts, walls (1-3), strips, Browser tab, picker, tray, demo site.
+Src/StreamWall.App/        Avalonia app -> StreamWall.exe: AppHost (composition root, real or
+                           --demo), WallManager + WallWindow + CellView (1-3 walls), the control
+                           panel (MainWindow tabs, BrowserView, PickerWindow, WallMapView),
+                           Web/ (WebEnvironment, injected Scripts/, the DemoSite), Screenshots.
+                           Later: tray, single instance, updater.
 Tests/StreamWall.Core.Tests/     Conventions (ASCII, US English, Core purity, URL allowlist),
                                  redaction, pseudonyms, config rules/document/repository.
 Tests/StreamWall.Platform.Tests/ Real DPAPI round-trip and quarantine, log file, paths (temp folders).
@@ -84,6 +88,7 @@ Tests/StreamWall.App.Tests/      Headless UI tests on the demo host (UiHarness; 
 Spikes/                    Throwaway proofs, outside the solution and central packages.
 Scripts/                   run, bump-version (pack, gen-icons in M6).
 Directory.Build.props      Version + shared Windows TFM.
+Directory.Build.targets    Drops WebView2's WPF/WinForms references (MSB3277).
 Directory.Packages.props   Central package versions (check nuget.org before adding/bumping).
 ```
 

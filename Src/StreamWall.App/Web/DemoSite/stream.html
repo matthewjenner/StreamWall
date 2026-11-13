@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Demo stream</title><link rel="stylesheet" href="/site.css">
+<script src="/fakeplayer.js"></script></head>
+<body>
+<header><a href="/index.html">All streams</a> Demo stream page</header>
+<div class="layout">
+  <div class="main"><div id="player-host"></div><h2 id="title"></h2><p>Description text.</p></div>
+  <div class="chat" id="chat"></div>
+</div>
+<script>
+  const n = Number(new URLSearchParams(location.search).get('n') || '1');
+  document.getElementById('title').textContent = 'Demo stream ' + n;
+  FakePlayer.mount(document.getElementById('player-host'), { name: 'Demo stream ' + n, hue: (n * 57) % 360 });
+  const chat = document.getElementById('chat');
+  setInterval(() => {
+    const p = document.createElement('p');
+    p.textContent = 'chat line ' + Date.now();
+    chat.appendChild(p);
+    if (chat.children.length > 200) chat.removeChild(chat.firstChild);
+  }, 900);
+</script>
+</body></html>

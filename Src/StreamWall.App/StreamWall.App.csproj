@@ -29,7 +29,18 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Avalonia.Controls.WebView" />
+    <PackageReference Include="Microsoft.Web.WebView2" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Injected into every cell (and frame) at document creation; see Docs/TECHARCH.md. -->
+    <EmbeddedResource Include="Web\Scripts\*.js" LogicalName="%(Filename)%(Extension)" />
+    <!-- The demo site (demo mode), served through a WebView2 virtual host; never used for real streams. -->
+    <None Include="Web\DemoSite\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <!-- WebView2's WPF/WinForms references are dropped repo-wide in Directory.Build.targets. -->
 
   <ItemGroup>
     <ProjectReference Include="..\StreamWall.Core\StreamWall.Core.csproj" />

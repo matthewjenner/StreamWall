@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Chat</title><link rel="stylesheet" href="/site.css"></head>
+<body><div id="chat"></div>
+<script>
+  const chat = document.getElementById('chat');
+  setInterval(() => {
+    const p = document.createElement('p');
+    p.textContent = 'chat line ' + Date.now();
+    chat.appendChild(p);
+    if (chat.children.length > 200) chat.removeChild(chat.firstChild);
+  }, 900);
+</script>
+</body></html>

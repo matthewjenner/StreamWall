@@ -1,0 +1,10 @@
+body { margin: 0; font: 14px sans-serif; background: #f4f4f4; color: #222; }
+header { min-height: 56px; background: #2a4d8f; color: #fff; padding: 16px; box-sizing: border-box; }
+header a { color: #fff; margin-right: 16px; }
+.layout { display: flex; gap: 16px; padding: 16px; flex-wrap: wrap; }
+.main { flex: 1; min-width: 320px; }
+.chat { width: 300px; height: 500px; background: #fff; border: 1px solid #ccc; overflow: auto; }
+.chat p { margin: 6px 10px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; padding: 16px; }
+.tiles a { display: block; padding: 24px; background: #fff; border: 1px solid #ccc; border-radius: 8px; color: #222; text-decoration: none; }
+.tiles a:hover { border-color: #2a4d8f; }

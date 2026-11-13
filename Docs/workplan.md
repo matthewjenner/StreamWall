@@ -22,7 +22,7 @@ Stop for review after each phase.
 | M0    | Docs and repo prep: CLAUDE.md, DESIGN, TECHARCH, workplan, README, license, gitleaks (secrets + URL guard), CI              | Done        |
 | M1    | Spike: check every TECHARCH "WebView2 requirement" with `NativeWebView`; video-only on a local test page; 12 cells measured | Done        |
 | M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Done        |
-| M3    | Browser and walls: shared environment, Browser tab (sign-in), 1-3 wall windows with N x M grids and monitor choice, Send to wall picker across walls, clear, stream library, video-only and audio scripts, demo site | Not started |
+| M3    | Browser and walls: shared environment, Browser tab (sign-in), 1-3 wall windows with N x M grids and monitor choice, Send to wall picker across walls, clear, stream library, video-only and audio scripts, demo site | Done        |
 | M4    | Wall polish: presets, full cell strips, expand, drag-to-swap, always-on-top / borderless / saved bounds, global hotkeys, 12-cell measurement | Not started |
 | M5    | Resilience: signed-out detection + single prompt, stall watchdog, crash recovery, staggered loading, throttling verified    | Not started |
 | M6    | Desktop and release: tray, single instance, profile hygiene, Velopack, release workflow, README numbers, v0.1.0             | Not started |
@@ -160,19 +160,52 @@ With streams configured in the app by the user:
       ids; assign, clear, next empty cell across walls, resize keeps each
       stream whose row and column survive; stream library add-or-reuse by
       URL (case, trailing slash and fragment ignored). Pure and tested.
-- [ ] Web view host: one shared environment (AppPaths.WebView, browser
+- [x] Web view host: one shared environment (AppPaths.WebView, browser
       arguments), SDK wrap, profile settings, new-window blocking; WebView2's
       WPF reference stripped (MSB3277).
-- [ ] Browser tab: back / forward / reload / home / URL bar, Send to wall,
+- [x] Browser tab: back / forward / reload / home / URL bar, Send to wall,
       This is the sign-in page.
-- [ ] Wall windows: 1-3, each borderless on a chosen monitor (fullscreen),
+- [x] Wall windows: 1-3, each borderless on a chosen monitor (fullscreen),
       N x M cells with a minimal strip (label, mute, volume, clear).
-- [ ] Picker: every wall's grid, filled vs empty, replace confirm, next empty.
-- [ ] Cells: video-only + audio scripts (from the spike, with its fix),
+- [x] Picker: every wall's grid, filled vs empty, replace confirm, next empty.
+- [x] Cells: video-only + audio scripts (from the spike, with its fix),
       staggered start.
-- [ ] Streams tab: library with masked URLs, reveal, rename, remove, paste URL.
-- [ ] `--demo` serves the fake site (from the spike) via virtual host; UI tests
+- [x] Streams tab: library with masked URLs, reveal, rename, remove, paste URL.
+- [x] `--demo` serves the fake site (from the spike) via virtual host; UI tests
       cover the model and the picker; screenshots of demo only.
+
+### Browser and walls (M3)
+
+- The control panel has Walls / Browser / Streams / Settings tabs (stacked
+  pages, not a TabControl, so the Browser's web view survives tab switches).
+  Send to wall opens `PickerWindow` (its own window: nothing draws over the
+  Browser's web view) with every wall's map, a replace confirm and Next empty
+  cell; with no walls it offers to add one.
+- `WallManager` keeps one `WallWindow` per open wall and updates cells in
+  place, so only a cell whose stream changed reloads. Cells start at least
+  300 ms apart. Closing a wall window marks it closed; exiting does not.
+  Non-fullscreen walls are a window at 60% of the monitor until saved bounds
+  (M4).
+- Changes apply at once and save 400 ms later (a slider drag is one write);
+  new URLs are registered with the redactor before the save. Exit flushes.
+- Host-level mute (`CoreWebView2.IsMuted`) for per-cell and master mute;
+  volume goes to the page and every frame as a web message, which the
+  video-only script applies (and re-applies when the player fights back).
+- `--demo` serves `Src/StreamWall.App/Web/DemoSite` (canvas-drawn silent video,
+  no media files) on `demo.example.invalid` with a demo-only WebView2 profile
+  (`%LOCALAPPDATA%\StreamWall\DemoWebView`). `--demo --screenshot <folder>`
+  sends a stream through the real Send to wall path, saves PNGs of every cell,
+  the Browser page and the Walls tab, and quits; its wall is windowed so it
+  never covers the monitor. First run (2026-11-13): all four cells "playing",
+  video-only correct including the cross-origin iframe player.
+- WebView2's WPF/WinForms references are dropped repo-wide in
+  `Directory.Build.targets` (they flow into the test project too).
+- Found and fixed: the Walls tab's monitor ComboBox lost its selection when the
+  monitor list arrived after the row (now re-applied after the items update,
+  and a transient -1 is never saved).
+- Not yet: signed-out detection and the "Sign in again" prompt (M5), presets,
+  expand, drag-to-swap, hotkeys, always-on-top (M4), Sign out & clear session
+  (M6).
 
 ### Decisions log
 
