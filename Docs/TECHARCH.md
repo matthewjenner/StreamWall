@@ -63,7 +63,7 @@ StreamWall.Platform  DPAPI IConfigVault (atomic write of config.dat), AppPaths, 
                      (mutex + activation pipe), VelopackUpdater (Core's IUpdater).
 StreamWall.App       Avalonia: AppHost composition root (real or --demo), the shared
                      WebView environment, CellHost (one web view + injected scripts),
-                     WallWindow, CellStrip, SignInWindow, ControlPanelWindow, tray,
+                     WallWindow (1-3), CellStrip, BrowserView, SendToWallPicker, ControlPanelWindow, tray,
                      global hotkeys, screenshot mode, and the embedded demo site.
 ```
 
@@ -83,7 +83,7 @@ thread**: CellHost feeds them events, and their timers use the injected
 
 - **One environment:** a single user-data folder
   (`%LOCALAPPDATA%\StreamWall\WebView`) and one set of browser arguments for
-  every cell and the sign-in window, so cookies are shared.
+  every cell and the Browser tab, so cookies are shared.
 - **Browser arguments** against background throttling (each verified to have
   an effect in WebView2): `--autoplay-policy=no-user-gesture-required`,
   `--disable-background-timer-throttling`, `--disable-renderer-backgrounding`,
@@ -92,7 +92,7 @@ thread**: CellHost feeds them events, and their timers use the injected
   Efficiency mode (EcoQoS) throttles the WebView2 processes.
 - **Hardware decode and GPU acceleration on.**
 - **New windows:** `NewWindowRequested` intercepted; cells never open pop-ups,
-  and a pop-up needed for sign-in is routed into the sign-in window.
+  and a pop-up needed for sign-in is routed into the Browser tab.
 - **Crash recovery:** `ProcessFailed` -> recreate the web view and reload.
 - **Profile settings:** password autosave and general autofill off.
 - **Scripts on every document, including iframes:** for video-only mode and

@@ -22,8 +22,8 @@ Stop for review after each phase.
 | M0    | Docs and repo prep: CLAUDE.md, DESIGN, TECHARCH, workplan, README, license, gitleaks (secrets + URL guard), CI              | Done        |
 | M1    | Spike: check every TECHARCH "WebView2 requirement" with `NativeWebView`; video-only on a local test page; 12 cells measured | Done        |
 | M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Done        |
-| M3    | One cell: shared environment, sign-in window, video-only and audio scripts, control panel stream list (masked), demo site   | Not started |
-| M4    | The grid: N x M walls, monitors, presets, cell strips, expand, drag-to-swap, global hotkeys, 12-cell measurement            | Not started |
+| M3    | Browser and walls: shared environment, Browser tab (sign-in), 1-3 wall windows with N x M grids and monitor choice, Send to wall picker across walls, clear, stream library, video-only and audio scripts, demo site | Not started |
+| M4    | Wall polish: presets, full cell strips, expand, drag-to-swap, always-on-top / borderless / saved bounds, global hotkeys, 12-cell measurement | Not started |
 | M5    | Resilience: signed-out detection + single prompt, stall watchdog, crash recovery, staggered loading, throttling verified    | Not started |
 | M6    | Desktop and release: tray, single instance, profile hygiene, Velopack, release workflow, README numbers, v0.1.0             | Not started |
 
@@ -65,7 +65,7 @@ Recorded generically on purpose (no names, hosts or identifying markup).
 
 With streams configured in the app by the user:
 
-- Sign in once, including 2FA, in the sign-in window; every cell loads
+- Sign in once, including 2FA, in the Browser tab; every cell loads
   signed in.
 - Every cell shows only its video, and all of them play audio at once with
   independent volumes.
@@ -154,7 +154,37 @@ With streams configured in the app by the user:
   release workflow (installs and auto-updates the user's own machine from this
   repo's releases), or only build locally with `Scripts/pack.sh`? Decide by M6.
 
+### M3 checklist
+
+- [x] Core wall model: walls (max 3) with rows x columns cells holding stream
+      ids; assign, clear, next empty cell across walls, resize keeps each
+      stream whose row and column survive; stream library add-or-reuse by
+      URL (case, trailing slash and fragment ignored). Pure and tested.
+- [ ] Web view host: one shared environment (AppPaths.WebView, browser
+      arguments), SDK wrap, profile settings, new-window blocking; WebView2's
+      WPF reference stripped (MSB3277).
+- [ ] Browser tab: back / forward / reload / home / URL bar, Send to wall,
+      This is the sign-in page.
+- [ ] Wall windows: 1-3, each borderless on a chosen monitor (fullscreen),
+      N x M cells with a minimal strip (label, mute, volume, clear).
+- [ ] Picker: every wall's grid, filled vs empty, replace confirm, next empty.
+- [ ] Cells: video-only + audio scripts (from the spike, with its fix),
+      staggered start.
+- [ ] Streams tab: library with masked URLs, reveal, rename, remove, paste URL.
+- [ ] `--demo` serves the fake site (from the spike) via virtual host; UI tests
+      cover the model and the picker; screenshots of demo only.
+
 ### Decisions log
+
+- **2026-11-13** - Streams are picked by browsing, not typing: the control
+  panel's Browser tab (shared profile) is where the user signs in and finds
+  streams, and **Send to wall** puts the current page into a cell chosen on a
+  map of every wall. Sent pages join the stream library automatically. This
+  replaces the separate sign-in window and the paste-a-URL stream list (kept
+  as a fallback). The signed-out URL pattern is set by pointing at the sign-in
+  page. Browser is a tab (can pop out later).
+- **2026-11-13** - Multiple walls (1-3 windows) are in the model and the
+  picker from M3, not added in M4, so nothing is built single-wall first.
 
 - **2026-11-13** - Logs never name streams by label (users can type anything
   into a label); cell index and stream pseudonym only. The redactor also hides

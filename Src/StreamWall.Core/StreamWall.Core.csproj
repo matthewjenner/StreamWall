@@ -4,4 +4,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="StreamWall.Core.Tests" />
+  </ItemGroup>
 </Project>

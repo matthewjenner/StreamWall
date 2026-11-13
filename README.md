@@ -20,7 +20,8 @@ git config core.hooksPath .githooks                 # once: gitleaks pre-commit 
 
 Each cell is an embedded web view (WebView2) on one shared browser profile,
 trimmed down to its `<video>` element. You sign in once, by hand, in the app's
-sign-in window (including any 2FA), and every cell is signed in. StreamWall
+Browser tab (including any 2FA), and every cell is signed in. Find a stream in the same tab and
+**Send to wall** puts it in any cell of any of your 1-3 wall windows. StreamWall
 never sees, stores or automates your credentials.
 
 ## Privacy

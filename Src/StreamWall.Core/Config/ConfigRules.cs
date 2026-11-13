@@ -38,9 +38,46 @@ public static class ConfigRules
             });
         }
 
+        // Walls: at most three, unique ids and names, clamped grids, exactly Rows * Columns cells,
+        // and every cell pointing at a stream that still exists (or empty).
+        var streamIds = streams.Select(s => s.Id).ToHashSet();
+        var wallIds = new HashSet<Guid>();
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var walls = new List<WallConfig>();
+        foreach (WallConfig w in (config.Walls ?? []).Take(WallLayout.MaxWalls))
+        {
+            int rows = Math.Clamp(w.Rows, 1, WallLayout.MaxRows);
+            int columns = Math.Clamp(w.Columns, 1, WallLayout.MaxColumns);
+            var cells = new Guid?[rows * columns];
+            IReadOnlyList<Guid?> old = w.Cells ?? [];
+            for (int i = 0; i < cells.Length && i < old.Count; i++)
+                cells[i] = old[i] is Guid id && streamIds.Contains(id) ? id : null;
+
+            string name = (w.Name ?? "").Trim();
+            if (name.Length == 0 || !names.Add(name))
+            {
+                for (int n = 1; ; n++)
+                {
+                    name = "Wall " + n.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    if (names.Add(name))
+                        break;
+                }
+            }
+            walls.Add(w with
+            {
+                Id = w.Id == Guid.Empty || !wallIds.Add(w.Id) ? Guid.NewGuid() : w.Id,
+                Name = name,
+                Rows = rows,
+                Columns = columns,
+                Monitor = Math.Max(0, w.Monitor),
+                Cells = cells,
+            });
+        }
+
         SiteConfig site = config.Site ?? new SiteConfig();
         return config with
         {
+            Walls = walls,
             Version = AppConfig.CurrentVersion,
             Site = site with
             {

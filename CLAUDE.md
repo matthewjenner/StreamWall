@@ -76,7 +76,7 @@ Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, 
                            hygiene, SingleInstance, VelopackUpdater.
 Src/StreamWall.App/        Avalonia app -> StreamWall.exe. Now: AppHost (composition root, real
                            or --demo with memory stores), the control-panel shell. Later: web view
-                           host + injected scripts, walls, strips, sign-in window, tray, demo site.
+                           host + injected scripts, walls (1-3), strips, Browser tab, picker, tray, demo site.
 Tests/StreamWall.Core.Tests/     Conventions (ASCII, US English, Core purity, URL allowlist),
                                  redaction, pseudonyms, config rules/document/repository.
 Tests/StreamWall.Platform.Tests/ Real DPAPI round-trip and quarantine, log file, paths (temp folders).

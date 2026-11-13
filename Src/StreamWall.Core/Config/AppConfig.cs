@@ -2,7 +2,7 @@ namespace StreamWall.Core.Config;
 
 /// <summary>
 /// Everything the user configures. Stored as one JSON document, encrypted for the Windows account
-/// (the Platform store); nothing site-specific exists anywhere else. Walls and presets join in M4.
+/// (the Platform store); nothing site-specific exists anywhere else. Presets join in M4.
 /// </summary>
 public sealed record AppConfig
 {
@@ -12,7 +12,11 @@ public sealed record AppConfig
 
     public SiteConfig Site { get; init; } = new();
 
+    /// <summary>The stream library: everything ever sent to a wall (or pasted), in order.</summary>
     public IReadOnlyList<StreamConfig> Streams { get; init; } = [];
+
+    /// <summary>1-3 walls (windows); see <see cref="WallLayout"/>.</summary>
+    public IReadOnlyList<WallConfig> Walls { get; init; } = [];
 
     /// <summary>0-100, scales every cell's volume.</summary>
     public int MasterVolume { get; init; } = 100;
