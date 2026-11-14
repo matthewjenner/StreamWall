@@ -5,7 +5,8 @@ namespace StreamWall.Core.Config;
 /// <summary>Defaults, limits and normalization: what any loaded or edited config is snapped to.</summary>
 public static class ConfigRules
 {
-    public const int DefaultVolume = 50;
+    /// <summary>New streams start nearly silent, so an unequalized stream never blasts (user request).</summary>
+    public const int DefaultVolume = 1;
     public const int DefaultStallTimeoutSeconds = 20;
     public const int MinStallTimeoutSeconds = 5;
     public const int MaxStallTimeoutSeconds = 600;
@@ -70,6 +71,7 @@ public static class ConfigRules
                 Rows = rows,
                 Columns = columns,
                 Monitor = Math.Max(0, w.Monitor),
+                Bounds = w.Bounds is { IsUsable: true } ? w.Bounds : null,
                 Cells = cells,
             });
         }
@@ -86,6 +88,7 @@ public static class ConfigRules
             },
             Streams = streams,
             MasterVolume = Math.Clamp(config.MasterVolume, 0, 100),
+            NewStreamVolume = Math.Clamp(config.NewStreamVolume, 0, 100),
             PseudonymKey = UsableKey(config.PseudonymKey) ? config.PseudonymKey : Convert.ToBase64String(Pseudonymizer.NewKey()),
         };
     }

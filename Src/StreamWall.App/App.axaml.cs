@@ -57,9 +57,19 @@ public sealed partial class App : Application
                 activation.Cancel();
                 host.Dispose();
             };
-            _ = host.StartAsync();
+            _ = StartAsync(host, window);
         }
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Loads the config (which opens the walls), then brings the control panel to the front: walls
+    /// open without focus, but a fullscreen one can still cover it (found after the first update).
+    /// </summary>
+    private static async Task StartAsync(AppHost host, Window controlPanel)
+    {
+        await host.StartAsync();
+        Dispatcher.UIThread.Post(() => Show(controlPanel), DispatcherPriority.Background);
     }
 
     private static void Show(Window window)

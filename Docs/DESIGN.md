@@ -73,7 +73,9 @@ developer or AI assistant sees while working on the app. The repo is public.
   dialog or pick a quality) and then returns to video-only.
 - **Audio from every cell at once** by default (no focus-to-hear). Per-cell
   volume (0-100) and mute, a master volume that scales them, and a master mute;
-  all persisted and re-applied after reloads.
+  all persisted and re-applied after reloads. New streams start at a quiet
+  **Volume for new streams** (Settings, default 1), so an unexpectedly loud
+  stream never blasts.
 - **Self-healing cells, no sign-in detection.** A cell whose video stops
   advancing, or that has no video at all (an expired session lands on a login
   page; a stream goes offline; the site is down), shows it on its strip and
@@ -88,9 +90,12 @@ developer or AI assistant sees while working on the app. The repo is public.
   interactive. Cells load a few hundred ms apart so the site is never hit by
   12 loads at once.
 - **Walls (1-3 windows from the start).** The control panel spawns up to three
-  walls, each its own borderless window with a rows x columns grid (1x1 to 4x4)
-  on a chosen monitor: fullscreen on that monitor or a saved position and
-  size, with always-on-top and borderless toggles. Walls are named ("Wall 1",
+  walls, each its own window with a rows x columns grid (1x1 to 4x4) on a
+  chosen monitor: **fullscreen** (borderless, the whole monitor) or **window**
+  (a normal window with a title bar, movable and resizable, that remembers
+  where it was put; changing its monitor recenters it), with an always-on-top
+  toggle (M4). Walls open without taking focus, and the control panel comes to
+  the front once they are up. Walls are named ("Wall 1",
   renameable) so the picker can say where things go. Each wall can be opened,
   closed (its cells stop) or removed; open walls reopen on launch. Resizing a
   grid keeps each stream whose row and column still exist; the rest leave the

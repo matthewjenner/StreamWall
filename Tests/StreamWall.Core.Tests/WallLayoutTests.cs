@@ -211,3 +211,44 @@ public sealed class WallNormalizationTests
         w.Cells.Should().Equal(c.Walls[0].Cells);
     }
 }
+
+public sealed class NewStreamVolumeAndBoundsTests
+{
+    [Fact]
+    public void NewStreamsStartAtTheConfiguredVolumeWhichDefaultsToOne()
+    {
+        AppConfig c = ConfigRules.Normalize(new AppConfig());
+        c.NewStreamVolume.Should().Be(1, "an unequalized stream must not blast");
+        (c, Guid wall) = WallLayout.AddWall(c, 1, 2);
+
+        c = WallLayout.SendToWall(c, "https://cams.example.invalid/1", new CellRef(wall, 0)).Config;
+        c.Streams[0].Volume.Should().Be(1);
+
+        c = ConfigRules.Normalize(c with { NewStreamVolume = 25 });
+        c = WallLayout.SendToWall(c, "https://cams.example.invalid/2", new CellRef(wall, 1)).Config;
+        c.Streams[1].Volume.Should().Be(25);
+        c.Streams[0].Volume.Should().Be(1, "existing streams keep their volume");
+    }
+
+    [Fact]
+    public void TheNewStreamVolumeIsClamped() =>
+        ConfigRules.Normalize(new AppConfig { NewStreamVolume = 250 }).NewStreamVolume.Should().Be(100);
+
+    [Fact]
+    public void AnOlderConfigWithoutTheSettingGetsTheDefault()
+    {
+        ConfigDocument.TryParse("""{"streams":[]}""", out AppConfig c, out _).Should().BeTrue();
+        c.NewStreamVolume.Should().Be(ConfigRules.DefaultVolume);
+    }
+
+    [Fact]
+    public void SavedWindowBoundsRoundTripAndTinyOnesAreDropped()
+    {
+        AppConfig c = ConfigRules.Normalize(new AppConfig { Walls = [new WallConfig { Fullscreen = false, Bounds = new WallBounds(-1200, 80, 960, 540) }] });
+        ConfigDocument.TryParse(ConfigDocument.Serialize(c), out AppConfig back, out _).Should().BeTrue();
+        back.Walls[0].Bounds.Should().Be(new WallBounds(-1200, 80, 960, 540), "negative X is a monitor to the left");
+
+        ConfigRules.Normalize(new AppConfig { Walls = [new WallConfig { Bounds = new WallBounds(0, 0, 50, 40) }] })
+            .Walls[0].Bounds.Should().BeNull();
+    }
+}

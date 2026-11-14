@@ -5,7 +5,7 @@
     but the release workflow never releases it.
   -->
   <PropertyGroup>
-    <VersionPrefix>0.1.2</VersionPrefix>
+    <VersionPrefix>0.1.3</VersionPrefix>
     <!--
       Stops the .NET SDK appending "+<git-commit-hash>" to AssemblyInformationalVersion, so the
       About box and the update check see a clean "1.2.3".

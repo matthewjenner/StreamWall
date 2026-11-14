@@ -205,8 +205,9 @@ public sealed partial class WallRowViewModel : ObservableObject
     partial void OnMonitorChanged(int value)
     {
         // -1 is the ComboBox briefly having no selection (its items were replaced), not a choice.
+        // A new monitor also drops the saved window position, so the wall centers there.
         if (value >= 0)
-            Change(w => w with { Monitor = value });
+            Change(w => w.Monitor == value ? w : w with { Monitor = value, Bounds = null });
     }
 
     partial void OnIsOpenChanged(bool value) => Change(w => w with { IsOpen = value });

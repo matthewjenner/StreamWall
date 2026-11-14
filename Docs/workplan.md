@@ -233,6 +233,15 @@ With streams configured in the app by the user:
 
 ### Decisions log
 
+- **2026-11-13** - From using v0.1.2 (released as v0.1.3): a windowed wall is a
+  normal window (title bar, movable, resizable) that saves its bounds after a
+  move or resize settles (the borderless "window" could not be moved; saved
+  bounds were pulled forward from M4). New streams start at volume 1, with a
+  "Volume for new streams" setting. Walls open without focus and the control
+  panel comes to the front after they load (it opened behind a fullscreen wall
+  after an update). Debounces use `Task.Delay`, not `DispatcherTimer`: headless
+  UI tests do not run dispatcher timers.
+
 - **2026-11-13** - "Dev copy" means "not the Velopack-installed copy" (decided
   at startup by `IsInstalled`), not "Debug build" (v0.1.2). A Release build run
   from the repo or `artifacts/publish` would otherwise have used the installed

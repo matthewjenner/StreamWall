@@ -25,6 +25,16 @@ public sealed partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private decimal _stallTimeoutSeconds = ConfigRules.DefaultStallTimeoutSeconds;
 
+    /// <summary>0-100: what a newly sent or pasted stream starts at.</summary>
+    [ObservableProperty]
+    private decimal _newStreamVolume = ConfigRules.DefaultVolume;
+
+    partial void OnNewStreamVolumeChanged(decimal value)
+    {
+        if (!_applying)
+            _host.Update(c => c with { NewStreamVolume = (int)value });
+    }
+
     [ObservableProperty]
     private string? _message;
 
@@ -47,6 +57,7 @@ public sealed partial class SettingsPageViewModel : ObservableObject
         try
         {
             StallTimeoutSeconds = config.Site.StallTimeoutSeconds;
+            NewStreamVolume = config.NewStreamVolume;
         }
         finally
         {

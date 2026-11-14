@@ -23,6 +23,9 @@ public sealed record AppConfig
 
     public bool MasterMuted { get; init; }
 
+    /// <summary>0-100: the volume a newly sent or pasted stream starts at (Settings).</summary>
+    public int NewStreamVolume { get; init; } = ConfigRules.DefaultVolume;
+
     /// <summary>Base64 key for <see cref="Diagnostics.Pseudonymizer"/>; generated on first run.</summary>
     public string PseudonymKey { get; init; } = "";
 

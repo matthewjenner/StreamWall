@@ -35,6 +35,19 @@ public sealed class WallViewModel
 
     public bool Fullscreen { get; private set; }
 
+    /// <summary>Where the user last put this wall as a window; null centers it on its monitor.</summary>
+    public WallBounds? Bounds { get; private set; }
+
+    /// <summary>The window was moved or resized by the user (windowed walls only).</summary>
+    public void SaveBounds(WallBounds bounds)
+    {
+        if (bounds.IsUsable && bounds != Bounds)
+        {
+            Bounds = bounds;
+            _host.Update(c => WallLayout.UpdateWall(c, Id, w => w with { Bounds = bounds }));
+        }
+    }
+
     public string Title => "StreamWall - " + Name;
 
     public ObservableCollection<CellViewModel> Cells { get; } = [];
@@ -60,7 +73,10 @@ public sealed class WallViewModel
         WallConfig wall = config.Walls[index];
         Number = index + 1;
 
-        bool placement = wall.Monitor != Monitor || wall.Fullscreen != Fullscreen;
+        // A bounds change from the window itself is not a reason to re-place it; one that comes
+        // with a monitor or mode change is (and a cleared one recenters).
+        bool placement = wall.Monitor != Monitor || wall.Fullscreen != Fullscreen || (wall.Bounds is null && Bounds is not null);
+        Bounds = wall.Bounds;
         bool title = wall.Name != Name;
         bool grid = wall.Rows != Rows || wall.Columns != Columns || Cells.Count != wall.CellCount;
         Name = wall.Name;

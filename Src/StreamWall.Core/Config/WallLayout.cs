@@ -115,7 +115,12 @@ public static class WallLayout
         if (config.Streams.FirstOrDefault(s => SameStreamKey(s.Url) == key) is { } existing)
             return (config, existing.Id, false);
 
-        var stream = new StreamConfig { Url = url.Trim(), Label = NextName(config.Streams.Select(s => s.Label), "Stream") };
+        var stream = new StreamConfig
+        {
+            Url = url.Trim(),
+            Label = NextName(config.Streams.Select(s => s.Label), "Stream"),
+            Volume = config.NewStreamVolume,
+        };
         return (ConfigRules.Normalize(config with { Streams = [.. config.Streams, stream] }), stream.Id, true);
     }
 
