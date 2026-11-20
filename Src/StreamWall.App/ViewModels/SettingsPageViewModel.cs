@@ -43,6 +43,51 @@ public sealed partial class SettingsPageViewModel : ObservableObject
             _host.Update(c => c with { LabelMode = value.Mode });
     }
 
+    /// <summary>The Open in Browser choices, in display order.</summary>
+    public static IReadOnlyList<OpenInBrowserChoiceItem> OpenInBrowserModes { get; } =
+    [
+        new(OpenInBrowserMode.KeepOnWall, "Open a tab, keep it on the wall"),
+        new(OpenInBrowserMode.MoveOffWall, "Open a tab, move it off the wall"),
+        new(OpenInBrowserMode.Ask, "Ask each time"),
+    ];
+
+    [ObservableProperty]
+    private OpenInBrowserChoiceItem _openInBrowser = OpenInBrowserModes[0];
+
+    [ObservableProperty]
+    private bool _restoreTabs = true;
+
+    [ObservableProperty]
+    private bool _focusNewTabs;
+
+    [ObservableProperty]
+    private bool _rememberZoom = true;
+
+    [ObservableProperty]
+    private int _savedZoomSites;
+
+    partial void OnOpenInBrowserChanged(OpenInBrowserChoiceItem value)
+    {
+        if (!_applying)
+            _host.Update(c => c with { OpenInBrowser = value.Mode });
+    }
+
+    partial void OnRestoreTabsChanged(bool value) => ChangeBrowser(b => b with { RestoreTabs = value });
+
+    partial void OnFocusNewTabsChanged(bool value) => ChangeBrowser(b => b with { FocusNewTabs = value });
+
+    partial void OnRememberZoomChanged(bool value) => ChangeBrowser(b => b with { RememberZoom = value });
+
+    /// <summary>Forgets every site's saved zoom (pages open at 100% again).</summary>
+    [RelayCommand]
+    private void ForgetZoom() => ChangeBrowser(b => b with { SiteZoom = new Dictionary<string, double>() });
+
+    private void ChangeBrowser(Func<BrowserConfig, BrowserConfig> change)
+    {
+        if (!_applying)
+            _host.Update(c => c with { Browser = change(c.Browser) });
+    }
+
     /// <summary>0-100: what a newly sent or pasted stream starts at.</summary>
     [ObservableProperty]
     private decimal _newStreamVolume = ConfigRules.DefaultVolume;
@@ -77,6 +122,11 @@ public sealed partial class SettingsPageViewModel : ObservableObject
             StallTimeoutSeconds = config.Site.StallTimeoutSeconds;
             NewStreamVolume = config.NewStreamVolume;
             LabelMode = LabelModes.FirstOrDefault(m => m.Mode == config.LabelMode) ?? LabelModes[0];
+            OpenInBrowser = OpenInBrowserModes.FirstOrDefault(m => m.Mode == config.OpenInBrowser) ?? OpenInBrowserModes[0];
+            RestoreTabs = config.Browser.RestoreTabs;
+            FocusNewTabs = config.Browser.FocusNewTabs;
+            RememberZoom = config.Browser.RememberZoom;
+            SavedZoomSites = config.Browser.SiteZoom.Count;
         }
         finally
         {
@@ -87,6 +137,12 @@ public sealed partial class SettingsPageViewModel : ObservableObject
 
 /// <summary>One Stream labels option for the Settings ComboBox.</summary>
 public sealed record LabelModeChoice(StreamLabelMode Mode, string Text)
+{
+    public override string ToString() => Text;
+}
+
+/// <summary>One Open in Browser option for the Settings ComboBox.</summary>
+public sealed record OpenInBrowserChoiceItem(OpenInBrowserMode Mode, string Text)
 {
     public override string ToString() => Text;
 }

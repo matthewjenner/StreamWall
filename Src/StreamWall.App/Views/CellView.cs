@@ -31,6 +31,7 @@ public sealed class CellView : DockPanel
     private readonly Slider _volume = new() { Minimum = 0, Maximum = 100, Width = 80, Margin = new Thickness(4, -8, 4, -8), VerticalAlignment = VerticalAlignment.Center, Name = "VolumeSlider" };
     private readonly Button _reload = Icons.Button(Icons.Reload, "Reload", "ReloadButton");
     private readonly Button _swap = Icons.Button(Icons.Swap, "Swap with another cell", "SwapButton");
+    private readonly Button _openInBrowser = Icons.Button(Icons.OpenInNew, "Open in a Browser tab", "OpenInBrowserButton");
     private readonly Button _clear = Icons.Button(Icons.Close, "Clear cell (stays in your library)", "ClearButton");
     private readonly Panel _body = new() { Background = Brushes.Black };
     private readonly TextBlock _placeholder = new()
@@ -69,6 +70,7 @@ public sealed class CellView : DockPanel
         right.Children.Add(_volume);
         right.Children.Add(_reload);
         right.Children.Add(_swap);
+        right.Children.Add(_openInBrowser);
         right.Children.Add(_clear);
         DockPanel.SetDock(right, Dock.Right);
         strip.Children.Add(right);
@@ -85,6 +87,7 @@ public sealed class CellView : DockPanel
         _clear.Click += (_, _) => _vm?.ClearCommand.Execute(null);
         _reload.Click += (_, _) => _vm?.ReloadCommand.Execute(null);
         _swap.Click += (_, _) => _vm?.SwapCommand.Execute(null);
+        _openInBrowser.Click += (_, _) => _vm?.OpenInBrowserCommand.Execute(null);
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _audioLog.Tick += (_, _) => LogAudio();
     }
@@ -189,7 +192,7 @@ public sealed class CellView : DockPanel
         {
             _label.Text = string.Create(CultureInfo.InvariantCulture, $"{_vm.Number}  {_vm.Label}");
             bool filled = !_vm.IsEmpty;
-            _mute.IsVisible = _volume.IsVisible = _reload.IsVisible = _swap.IsVisible = _clear.IsVisible = filled;
+            _mute.IsVisible = _volume.IsVisible = _reload.IsVisible = _swap.IsVisible = _openInBrowser.IsVisible = _clear.IsVisible = filled;
             _mute.IsChecked = _vm.Muted;
             _mute.Content = _vm.Muted ? Icons.Mute : Icons.Volume;
             ToolTip.SetTip(_mute, _vm.Muted ? "Unmute" : "Mute");
@@ -214,7 +217,7 @@ public sealed class CellView : DockPanel
     private void Recreate()
     {
         RemoveWebView();
-        if (_vm?.Url is not { } url || VisualRoot is null)
+        if (_vm?.Url is not { } url || VisualRoot is null || !_web.Enabled)
             return;
 
         int generation = ++_generation;
@@ -230,7 +233,7 @@ public sealed class CellView : DockPanel
         var view = new NativeWebView { Background = Brushes.Black };
         _view = view;
         string? selector = _vm.VideoSelector;
-        _web.Attach(view, async core =>
+        _web.Attach(view, async (core, _) =>
         {
             if (generation != _generation)
                 return;

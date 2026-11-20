@@ -82,15 +82,22 @@ public sealed class AppHost : IDisposable
 
     public bool IsLoaded { get; private set; }
 
-    /// <summary>Where the Browser tab opens: its last page, else the demo index, else blank.</summary>
-    public string BrowserStart => Config.Site.BrowserUrl ?? (Demo ? WebEnvironment.DemoHome : "about:blank");
+    /// <summary>A new tab's page: the demo index in demo mode, else blank.</summary>
+    public string NewTabPage => Demo ? WebEnvironment.DemoHome : "about:blank";
 
-    /// <summary>Remembers the Browser tab's page so it reopens there (http(s) pages only).</summary>
-    public void RememberBrowserPage(string url)
-    {
-        if (ConfigRules.IsValidUrl(url) && url != Config.Site.BrowserUrl)
-            Update(c => c with { Site = c.Site with { BrowserUrl = url } });
-    }
+    /// <summary>Saves the Browser's open tabs and which is selected (restored on launch per Settings).</summary>
+    public void SaveTabs(IReadOnlyList<string?> tabs, int active) => Update(c => BrowserRules.WithTabs(c, tabs, active));
+
+    /// <summary>The zoom to apply to a page (its site's), or null when zoom is not remembered.</summary>
+    public double? ZoomFor(string? url) => BrowserRules.ZoomFor(Config, url);
+
+    /// <summary>The user zoomed a page: remember it for the site (when Remember zoom is on).</summary>
+    public void SaveZoom(string? url, double zoom) => Update(c => BrowserRules.WithZoom(c, url, zoom));
+
+    /// <summary>Asks the control panel to open <paramref name="url"/> in a new Browser tab and come to the front.</summary>
+    public void OpenInBrowser(string url) => OpenInBrowserRequested?.Invoke(url);
+
+    public event Action<string>? OpenInBrowserRequested;
 
     public static string Version { get; } =
         typeof(AppHost).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";

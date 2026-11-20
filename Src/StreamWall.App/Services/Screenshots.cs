@@ -24,7 +24,31 @@ internal static class Screenshots
         {
             await Delay(1500);
             vm.SelectedTab = ControlPanelTab.Browser;
+            // A second tab, as a link opened in the background would make.
+            vm.Browser.OpenTab($"https://{Web.WebEnvironment.DemoHost}/stream.html?n=2", focus: false);
             await Delay(2500);
+
+            // Zoom per site, through the real controller: 130% on the demo site is reported and
+            // saved, and a new tab on the same site opens at 130%.
+            BrowserView? browserView = window.GetVisualDescendants().OfType<BrowserView>().FirstOrDefault();
+            report.Add("zoom: controller before " + browserView?.CurrentZoomFactor);
+            try
+            {
+                vm.Browser.SelectedTab!.RequestZoom(1.3);
+            }
+            catch (Exception ex)
+            {
+                report.Add("zoom: set failed " + ex.GetType().Name + " " + ex.Message);
+            }
+            await Delay(500);
+            report.Add("zoom: controller after " + browserView?.CurrentZoomFactor);
+            report.Add("zoom: tab reports " + vm.Browser.SelectedTab!.ZoomPercent + "%, saved sites " + host.Config.Browser.SiteZoom.Count);
+            BrowserTabViewModel sameSite = vm.Browser.OpenTab($"https://{Web.WebEnvironment.DemoHost}/stream.html?n=3", focus: true);
+            await Delay(2500);
+            report.Add("zoom: new tab on the same site opens at " + sameSite.ZoomPercent + "%");
+            vm.Browser.ZoomResetCommand.Execute(null);
+            await Delay(300);
+            report.Add("zoom: after reset " + sameSite.ZoomPercent + "%, saved sites " + host.Config.Browser.SiteZoom.Count);
 
             // The real Send to wall path: the next empty cell gets demo stream 5.
             if (WallLayout.NextEmpty(host.Config) is CellRef next)
@@ -36,6 +60,8 @@ internal static class Screenshots
 
             if (window.GetVisualDescendants().OfType<BrowserView>().FirstOrDefault() is { } browser)
                 report.Add("browser: " + await Save(folder, "browser.png", browser.CaptureAsync));
+            SaveRendered(window, Path.Combine(folder, "browser-tab.png"));
+            report.Add("browser-tab.png: saved, " + vm.Browser.Tabs.Count + " tab(s)");
 
             foreach (WallWindow wall in walls.OpenWindows)
             {

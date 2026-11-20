@@ -21,6 +21,11 @@ public static class Icons
     public static readonly string Swap = Glyph(0xE8AB);
     public static readonly string OpenInNew = Glyph(0xE8A7);
     public static readonly string Close = Glyph(0xE711);
+    public static readonly string Add = Glyph(0xE710);
+    public static readonly string Back = Glyph(0xE72B);
+    public static readonly string Forward = Glyph(0xE72A);
+    public static readonly string ZoomIn = Glyph(0xE8A3);
+    public static readonly string ZoomOut = Glyph(0xE71F);
 
     /// <summary>A small, flat icon button with a tooltip (the strip's controls).</summary>
     public static Button Button(string glyph, string tip, string name) => Style(new Button(), glyph, tip, name);

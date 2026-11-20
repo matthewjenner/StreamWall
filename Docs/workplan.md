@@ -231,20 +231,34 @@ With streams configured in the app by the user:
   expand, drag-to-swap, hotkeys, always-on-top (M4), Sign out & clear session
   (M6).
 
-### Next (v0.2.0, planned with the user 2026-11-20)
+### Browser tabs, zoom, Open in Browser (v0.2.0)
 
-- **Browser tabs:** each tab its own web view on the shared profile; a tab
-  strip with title, a playing-audio mute button, close (x and middle-click)
-  and new tab; middle-click, Ctrl+click and new-window links open a tab; the
-  context menu says "Open link in new tab". Send to wall and zoom act on the
-  current tab. Setting: **restore tabs on launch** (default on).
-- **Zoom per site:** remember the zoom level per site and restore it in any
-  tab (controller ZoomFactor via the raw COM interface; CSS zoom fallback),
-  with a "- 130% +" control. Setting: **remember zoom per site** (default on).
-- **Open in Browser** strip button: the cell's page in a new tab, control
-  panel to the front. Setting: **keep on wall** (default) / **move off wall** /
-  **ask each time**.
-- Every setting gets normalization, round-trip and behavior tests.
+- **Tabs:** `BrowserViewModel` holds `BrowserTabViewModel`s; `BrowserView`
+  draws the strip and keeps one `BrowserTabView` (web view) per tab, showing
+  only the selected one. Restored tabs load when first shown; a tab opened
+  from a link loads at once in the background. New-window requests and the
+  context menu's "Open link in new window" (replaced by a custom "Open link in
+  new tab" item) open tabs. The tab list is saved as it changes
+  (`BrowserRules.WithTabs`) and restored by `BrowserRules.StartTabs`. A tab's
+  placeholder "New tab" title is never used as a stream label (found by a
+  test: it is `PageTitle` vs the strip's `Title`).
+- **Zoom per site:** `BrowserRules.ZoomFor` / `WithZoom` (host-keyed, 25-500%,
+  1.0 not stored), applied on every navigation, saved on every change.
+  `ControllerZoom` reads and sets the controller's `ZoomFactor` through a
+  self-declared COM interface: the SDK's raw interfaces are embedded interop
+  types (`[TypeIdentifier]`), which C# cannot reference, and Avalonia's
+  controller pointer cannot be wrapped by the SDK. Changes are noticed by
+  reading the factor every 500 ms: `ZoomFactorChanged` never reached a
+  self-declared handler. Verified in `--demo --screenshot` (130% saved and
+  restored in a new tab of the same site; reset forgets the site).
+- **Open in Browser:** `WallViewModel.OpenInBrowserAsync` per the setting;
+  `OpenInBrowserDialog` for "Ask each time"; the control panel comes forward
+  on the new tab (`MainWindowViewModel.ShowRequested`).
+- Settings: Restore tabs, Focus new tabs, Remember zoom (+ Forget saved zoom
+  levels), Open in Browser mode. Every one has normalization, round-trip and
+  UI tests (`BrowserRulesTests`, `BrowserTabsUiTests`).
+- Headless tests set `WebEnvironment.Enabled = false`, so the real Browser
+  tab, its strip and walls with streams run in tests without WebView2.
 
 ### Decisions log
 

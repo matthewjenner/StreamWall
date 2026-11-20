@@ -147,20 +147,6 @@ public sealed class MainWindowUiTests
     });
 
     [Fact]
-    public Task TheBrowserReopensAtItsLastPage() => TestApp.Run(() =>
-    {
-        using UiHarness ui = UiHarness.Start(new AppConfig());
-        ui.ViewModel.Browser.StartPage.Should().Be(WebEnvironment.DemoHome, "a fresh demo opens at the demo index");
-
-        ui.ViewModel.Browser.CurrentUrl = "https://cams.example.invalid/account/page?x=1";
-        ui.ViewModel.Browser.CurrentUrl = "about:blank";
-
-        ui.Host.Config.Site.BrowserUrl.Should().Be("https://cams.example.invalid/account/page?x=1", "only http(s) pages are remembered");
-        ui.ViewModel.Browser.StartPage.Should().Be("https://cams.example.invalid/account/page?x=1");
-        ui.LogText.Should().NotContain("account/page");
-    });
-
-    [Fact]
     public Task ClearingACellFromTheWallsTabKeepsTheStream() => TestApp.Run(() =>
     {
         using UiHarness ui = UiHarness.Start();

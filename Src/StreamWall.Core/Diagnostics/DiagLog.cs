@@ -57,6 +57,9 @@ public sealed class DiagLog(IDiagSink sink, LogRedactor redactor)
     public void CellsSwapped(int wallA, int cellA, int wallB, int cellB) =>
         Emit(DiagLevel.Info, "Wall", F($"wall {wallA} cell {cellA} swapped with wall {wallB} cell {cellB}"));
 
+    public void CellOpenedInBrowser(int wall, int cell, bool moved) =>
+        Emit(DiagLevel.Info, "Wall", F($"wall {wall} cell {cell} opened in a Browser tab") + (moved ? " and cleared" : ""));
+
     public void CellReloaded(int wall, int cell) => Emit(DiagLevel.Info, "Cell", F($"wall {wall} cell {cell} reloaded by the user"));
 
     public void ReloadAll(int cells) => Emit(DiagLevel.Info, "Wall", F($"reload all: {cells} cell(s)"));

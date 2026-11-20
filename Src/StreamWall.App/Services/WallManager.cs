@@ -32,6 +32,9 @@ public sealed class WallManager
     /// <summary>Shows the swap picker over a wall (set by the App; tests may fake it).</summary>
     public Func<WallWindow, CellViewModel, Task<CellRef?>>? PickSwapTarget { get; set; }
 
+    /// <summary>Asks "open or move?" over a wall, for Open in Browser set to Ask (set by the App).</summary>
+    public Func<WallWindow, CellViewModel, Task<OpenInBrowserChoice?>>? AskOpenInBrowser { get; set; }
+
     /// <summary>Reloads every cell on every open wall, staggered.</summary>
     public void ReloadAll() => _host.Log.ReloadAll(_open.Values.Sum(w => w.ViewModel.ReloadAll()));
 
@@ -47,7 +50,8 @@ public sealed class WallManager
             {
                 WallWindow? owner = null;
                 var vm = new WallViewModel(_host, wall.Id, NextStartDelay,
-                    cell => owner is not null && PickSwapTarget is { } pick ? pick(owner, cell) : Task.FromResult<CellRef?>(null));
+                    cell => owner is not null && PickSwapTarget is { } pick ? pick(owner, cell) : Task.FromResult<CellRef?>(null),
+                    cell => owner is not null && AskOpenInBrowser is { } ask ? ask(owner, cell) : Task.FromResult<OpenInBrowserChoice?>(null));
                 vm.Apply(config);
                 window = new WallWindow(vm, _host.Web, _host.Log);
                 owner = window;

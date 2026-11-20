@@ -16,7 +16,7 @@ It is **.NET 10 + Avalonia 12**, following Klakr's layout and the standards of
 Updatr and RingView (the newest local apps), released with Velopack from this
 **public** repo. `Docs/workplan.md` has the phases and decisions.
 
-Status: **M3 (Browser and walls) done.** The control panel (Walls / Browser /
+Status: **v0.2.0.** The control panel (Walls / Browser with tabs /
 Streams / Settings), 1-3 wall windows, Send to wall with the picker, and the
 demo site work. Next: M4 wall polish, M5 resilience (see `Docs/workplan.md`).
 The M1 spike lives in `Spikes/StreamWall.WebViewSpike`.
@@ -71,7 +71,8 @@ Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
 Src/StreamWall.Core/       Pure logic. Now: Config (AppConfig, WallConfig, WallLayout, ConfigRules,
                            ConfigDocument, ConfigRepository + IConfigStore), Diagnostics (DiagLog,
                            LogRedactor, Pseudonymizer), Presentation (UrlMask, WallMap),
-                           StreamLabels (page-title labels), UpdateService. Later:
+                           StreamLabels (page-title labels), BrowserConfig + BrowserRules (tabs,
+                           zoom per site), UpdateService. Later:
                            presets, CellWatchdog, CellDisplay.
                            net10.0, no packages, no P/Invoke (CorePurityConventionTests).
 Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, atomic, sets an
@@ -81,7 +82,8 @@ Src/StreamWall.App/        Avalonia app -> StreamWall.exe: AppHost (composition 
                            --demo), WallManager + WallWindow + CellView (1-3 walls), the control
                            panel (MainWindow tabs, BrowserView, PickerWindow incl. swap mode,
                            WallMapView), Icons (standard glyph buttons for the strip),
-                           Web/ (WebEnvironment, injected Scripts/, the DemoSite), Screenshots.
+                           Web/ (WebEnvironment, ControllerZoom, injected Scripts/, the DemoSite),
+                           BrowserTabView (one per tab), OpenInBrowserDialog, Screenshots.
                            Later: tray. Program runs Velopack's hooks and the single-instance guard.
 Tests/StreamWall.Core.Tests/     Conventions (ASCII, US English, Core purity, URL allowlist),
                                  redaction, pseudonyms, config rules/document/repository.
@@ -139,6 +141,15 @@ Directory.Packages.props   Central package versions (check nuget.org before addi
   "(dev)" in the title. **Work only with dev data:** tail
   `%APPDATA%\StreamWall\Dev\logs\streamwall.log`, never the installed copy's log
   unless the user asks, and never its config or profile.
+- **The WebView2 SDK's raw COM interfaces cannot be used from C#.** They are
+  embedded interop types (`[TypeIdentifier]`), invisible to the compiler even
+  though reflection lists them. Declare what you need yourself, with the GUID
+  and method order read from the SDK's metadata (see `ControllerZoom`). COM
+  events into self-declared handlers did not fire; poll instead.
+- **Headless tests have no WebView2:** `UiHarness` sets `WebEnvironment.Enabled
+  = false`, so views that would host a web view show nothing and everything
+  around them still runs. Check web view behavior with `--demo --screenshot`,
+  whose report also verifies zoom per site end to end.
 - **Updates only act in an installed copy** (Velopack `IsInstalled`); dev, demo
   and `artifacts/publish` runs show no update banner. A downloaded update
   installs on quit (or "Restart and install" in the banner).

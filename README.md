@@ -4,7 +4,7 @@ An always-on Windows video wall for web video streams that need a sign-in:
 many streams tiled across one or more borderless windows, each cell showing
 only its video, all playing audio at once.
 
-> **Status: early development (0.x).** The Browser tab, Send to wall and 1-3 wall windows work;
+> **Status: early development (0.x).** A tabbed Browser, Send to wall, swap and 1-3 wall windows work;
 > presets, recovery and the tray are next. See [Docs/workplan.md](Docs/workplan.md).
 
 ## Develop

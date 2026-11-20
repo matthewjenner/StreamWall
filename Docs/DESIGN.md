@@ -49,13 +49,29 @@ developer or AI assistant sees while working on the app. The repo is public.
 
 ## Core UX
 
-- **Browser tab.** The control panel has a Browser tab: one interactive web
-  view on the shared profile with back, forward, reload and a URL bar, which
-  reopens at its last page. It is where the user signs in (including 2FA, by
-  hand), exactly as in Edge, and where they find streams. Every cell shares
-  that session, so there is no sign-in setup: no sign-in page, pattern or
-  selector to configure. The app never sees, stores or automates credentials
-  or 2FA codes. Password saving and autofill are off in the profile.
+- **Browser tab.** The control panel has a Browser tab with **browser tabs**,
+  all on the shared profile, plus back, forward, reload and a URL bar. It is
+  where the user signs in (including 2FA, by hand), exactly as in Edge, and
+  where they find streams. Every cell shares that session, so there is no
+  sign-in setup: no sign-in page, pattern or selector to configure. The app
+  never sees, stores or automates credentials or 2FA codes. Password saving
+  and autofill are off in the profile.
+  - **Tabs:** a strip with each tab's title, a speaker button while it plays
+    audio (click to mute it), and a close button; middle-click closes; +
+    opens one. Middle-click, Ctrl+click and new-window links open a tab, and
+    the right-click menu offers "Open link in new tab". Background tabs keep
+    running, so several streams can play in tabs (some sites pause hidden
+    video). Closing the last tab leaves a fresh one. Settings: **reopen all
+    tabs on launch** (default) or start with one tab at the last page;
+    **tabs from links load in the background** (default) or come to the front.
+  - **Zoom per site:** Ctrl+wheel, Ctrl+plus/minus or the toolbar's - 100% +
+    (click the percentage to reset). The level is remembered per site and
+    restored in any tab that opens one of its pages. Settings: **remember zoom
+    per site** (default on) and **Forget saved zoom levels**.
+  - **Open in Browser** (a wall cell's strip button) opens the cell's page in
+    a new tab and brings the control panel forward on it. Setting: **keep it
+    on the wall** (default), **move it off the wall** (it stays in the
+    library), or **ask each time**.
 - **Send to wall.** On any page in the Browser tab, **Send to wall** opens the
   picker: a mini map of every wall (1-3) showing each cell's label or "empty".
   Clicking a cell sends the current page there; **Next empty cell** skips the
@@ -103,8 +119,9 @@ developer or AI assistant sees while working on the app. The repo is public.
 - **Cell strip.** A slim strip above each cell holds the controls (nothing can
   be drawn over a native web view): number, label, status dot (playing /
   waiting / no video / error), then one-click icon buttons with tooltips, using
-  standard Windows icons: mute, a volume slider, **reload**, **swap**, and
-  **clear**. (Planned: open in the Browser, interactive toggle, expand.)
+  standard Windows icons: mute, a volume slider, **reload**, **swap**, **open
+  in Browser** and
+  **clear**. (Planned: interactive toggle, expand.)
   Double-clicking a strip or a hotkey **expands** a cell to fill its wall
   (M4). A global hotkey hides every strip for a clean wall (M4).
 - **Swap.** The strip's swap button opens the picker titled "Swap 'X' with:",

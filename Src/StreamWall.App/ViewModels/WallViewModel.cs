@@ -13,13 +13,16 @@ public sealed class WallViewModel : ICellActions
     private readonly AppHost _host;
     private readonly Func<TimeSpan> _nextStartDelay;
     private readonly Func<CellViewModel, Task<CellRef?>> _pickSwapTarget;
+    private readonly Func<CellViewModel, Task<OpenInBrowserChoice?>> _askOpenInBrowser;
 
-    public WallViewModel(AppHost host, Guid wallId, Func<TimeSpan> nextStartDelay, Func<CellViewModel, Task<CellRef?>>? pickSwapTarget = null)
+    public WallViewModel(AppHost host, Guid wallId, Func<TimeSpan> nextStartDelay, Func<CellViewModel, Task<CellRef?>>? pickSwapTarget = null,
+        Func<CellViewModel, Task<OpenInBrowserChoice?>>? askOpenInBrowser = null)
     {
         _host = host;
         Id = wallId;
         _nextStartDelay = nextStartDelay;
         _pickSwapTarget = pickSwapTarget ?? (_ => Task.FromResult<CellRef?>(null));
+        _askOpenInBrowser = askOpenInBrowser ?? (_ => Task.FromResult<OpenInBrowserChoice?>(null));
     }
 
     public Guid Id { get; }
@@ -142,4 +145,43 @@ public sealed class WallViewModel : ICellActions
     }
 
     public void PageTitle(Guid stream, string? title) => _host.Update(c => StreamLabels.ApplyPageTitle(c, stream, title));
+
+    /// <summary>
+    /// The cell's page in a new Browser tab. Settings decide the cell: keep it playing, move it off
+    /// the wall (it stays in the library), or ask each time.
+    /// </summary>
+    public async Task OpenInBrowserAsync(CellViewModel cell)
+    {
+        if (cell.Url is not { } url)
+            return;
+        bool move;
+        switch (_host.Config.OpenInBrowser)
+        {
+            case OpenInBrowserMode.MoveOffWall:
+                move = true;
+                break;
+            case OpenInBrowserMode.Ask:
+                if (await _askOpenInBrowser(cell) is not OpenInBrowserChoice choice)
+                    return;
+                move = choice == OpenInBrowserChoice.Move;
+                break;
+            default:
+                move = false;
+                break;
+        }
+        _host.OpenInBrowser(url);
+        if (move)
+            _host.Update(c => WallLayout.Clear(c, cell.Ref));
+        _host.Log.CellOpenedInBrowser(Number, cell.Number, move);
+    }
+}
+
+/// <summary>The answer to "Open in Browser" when the setting is Ask each time.</summary>
+public enum OpenInBrowserChoice
+{
+    /// <summary>Open it in a tab and keep it on the wall.</summary>
+    Open,
+
+    /// <summary>Open it in a tab and clear the cell.</summary>
+    Move,
 }

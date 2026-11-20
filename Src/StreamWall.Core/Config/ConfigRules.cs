@@ -90,6 +90,8 @@ public static class ConfigRules
             MasterVolume = Math.Clamp(config.MasterVolume, 0, 100),
             NewStreamVolume = Math.Clamp(config.NewStreamVolume, 0, 100),
             LabelMode = Enum.IsDefined(config.LabelMode) ? config.LabelMode : StreamLabelMode.PageTitle,
+            Browser = BrowserRules.NormalizeBrowser(config.Browser, site.BrowserUrl),
+            OpenInBrowser = Enum.IsDefined(config.OpenInBrowser) ? config.OpenInBrowser : OpenInBrowserMode.KeepOnWall,
             PseudonymKey = UsableKey(config.PseudonymKey) ? config.PseudonymKey : Convert.ToBase64String(Pseudonymizer.NewKey()),
         };
     }

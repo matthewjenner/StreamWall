@@ -29,10 +29,17 @@ public sealed class WebEnvironment(string userDataFolder, bool demo)
     public static string DemoHome => $"https://{DemoHost}/index.html";
 
     /// <summary>
-    /// Wires a web view to the shared environment. <paramref name="ready"/> runs on the UI thread
-    /// once the WebView2 behind it exists, with the SDK object to drive it.
+    /// False in headless UI tests (no WebView2 there): views that would host a web view show
+    /// nothing instead, and everything around them still runs.
     /// </summary>
-    public void Attach(NativeWebView view, Func<CoreWebView2, Task> ready, Action<Exception> failed)
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Wires a web view to the shared environment. <paramref name="ready"/> runs on the UI thread
+    /// once the WebView2 behind it exists, with the SDK object to drive it and the raw
+    /// ICoreWebView2Controller pointer (for zoom, which the SDK cannot wrap from Avalonia's pointer).
+    /// </summary>
+    public void Attach(NativeWebView view, Func<CoreWebView2, IntPtr, Task> ready, Action<Exception> failed)
     {
         view.EnvironmentRequested += (_, e) =>
         {
@@ -52,7 +59,7 @@ public sealed class WebEnvironment(string userDataFolder, bool demo)
                     throw new InvalidOperationException("WebView2 is not available on this system.");
                 CoreWebView2 core = CoreWebView2.CreateFromComICoreWebView2(handle.CoreWebView2);
                 Configure(core);
-                await ready(core);
+                await ready(core, handle.CoreWebView2Controller);
             }
             catch (Exception ex)
             {

@@ -139,6 +139,21 @@
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="How streams are named on the walls, in the picker and in Streams. A label you type yourself is never replaced." />
                     <ComboBox Name="LabelModeBox" ItemsSource="{x:Static vm:SettingsPageViewModel.LabelModes}" SelectedItem="{Binding LabelMode}" MinWidth="320" />
+                    <TextBlock Text="Open in Browser (wall cells)" FontWeight="SemiBold" Margin="0,16,0,0" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="What a cell's Open in Browser button does with the cell. Moved streams stay in your library." />
+                    <ComboBox Name="OpenInBrowserBox" ItemsSource="{x:Static vm:SettingsPageViewModel.OpenInBrowserModes}" SelectedItem="{Binding OpenInBrowser}" MinWidth="320" />
+                    <TextBlock Text="Browser" FontWeight="SemiBold" Margin="0,16,0,0" />
+                    <ToggleSwitch Name="RestoreTabsSwitch" IsChecked="{Binding RestoreTabs}"
+                                  OnContent="Reopen all tabs on launch" OffContent="Start with one tab (the last page)" />
+                    <ToggleSwitch Name="FocusNewTabsSwitch" IsChecked="{Binding FocusNewTabs}"
+                                  OnContent="Tabs opened from links come to the front" OffContent="Tabs opened from links load in the background" />
+                    <ToggleSwitch Name="RememberZoomSwitch" IsChecked="{Binding RememberZoom}"
+                                  OnContent="Remember zoom per site" OffContent="Do not remember zoom" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Name="ForgetZoomButton" Content="Forget saved zoom levels" Command="{Binding ForgetZoomCommand}" />
+                        <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding SavedZoomSites, StringFormat='{}{0} site(s) saved'}" />
+                    </StackPanel>
                     <TextBlock Text="Volume for new streams (0-100)" FontWeight="SemiBold" Margin="0,16,0,0" />
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Streams you send to a wall start at this volume, so an unexpectedly loud one never blasts. Adjust each on its strip." />

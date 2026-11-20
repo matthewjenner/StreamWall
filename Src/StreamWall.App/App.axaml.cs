@@ -39,6 +39,8 @@ public sealed partial class App : Application
                 // A cell's Swap button: the picker over that wall, its own cell marked.
                 PickSwapTarget = (wall, cell) =>
                     new PickerWindow(WallMap.From(host.Config), "\"" + cell.Label + "\"", host.AddWall, cell.Ref).ShowDialog<CellRef?>(wall),
+                // Open in Browser with "Ask each time".
+                AskOpenInBrowser = (wall, cell) => new OpenInBrowserDialog(cell.Label).ShowDialog<OpenInBrowserChoice?>(wall),
             };
             _walls = walls;
             var viewModel = new MainWindowViewModel(host);
@@ -56,6 +58,8 @@ public sealed partial class App : Application
             // A second launch asks this one to show its control panel.
             var activation = new CancellationTokenSource();
             _ = Program.Instance?.ListenAsync(() => Dispatcher.UIThread.Post(() => Show(window)), activation.Token);
+            // Open in Browser from a wall: the control panel comes to the front on that tab.
+            viewModel.ShowRequested += () => Show(window);
 
             desktop.Exit += (_, _) =>
             {

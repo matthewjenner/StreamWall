@@ -29,6 +29,12 @@ public sealed record AppConfig
     /// <summary>How streams are labeled from page titles (Settings).</summary>
     public StreamLabelMode LabelMode { get; init; } = StreamLabelMode.PageTitle;
 
+    /// <summary>The Browser tab's tabs, zoom per site, and their settings.</summary>
+    public BrowserConfig Browser { get; init; } = new();
+
+    /// <summary>What a cell's "Open in Browser" button does with the cell (Settings).</summary>
+    public OpenInBrowserMode OpenInBrowser { get; init; } = OpenInBrowserMode.KeepOnWall;
+
     /// <summary>Base64 key for <see cref="Diagnostics.Pseudonymizer"/>; generated on first run.</summary>
     public string PseudonymKey { get; init; } = "";
 
@@ -36,6 +42,11 @@ public sealed record AppConfig
     public IEnumerable<string?> Urls()
     {
         yield return Site.BrowserUrl;
+        foreach (string tab in Browser.Tabs)
+            yield return tab;
+        // Zoom is keyed by host: register each site too.
+        foreach (string host in Browser.SiteZoom.Keys)
+            yield return "https://" + host + "/";
         foreach (StreamConfig stream in Streams)
             yield return stream.Url;
     }

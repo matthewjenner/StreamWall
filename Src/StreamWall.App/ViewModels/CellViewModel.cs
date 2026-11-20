@@ -124,6 +124,10 @@ public sealed partial class CellViewModel : ObservableObject
     [RelayCommand]
     private Task Swap() => IsEmpty ? Task.CompletedTask : _actions.SwapAsync(this);
 
+    /// <summary>Opens the page in a new Browser tab (Settings: keep on wall, move off, or ask).</summary>
+    [RelayCommand]
+    private Task OpenInBrowser() => IsEmpty ? Task.CompletedTask : _actions.OpenInBrowserAsync(this);
+
     [RelayCommand]
     private void ToggleMute() => Muted = !Muted;
 
@@ -154,6 +158,9 @@ public interface ICellActions
 
     /// <summary>Picks a cell to swap with, then swaps.</summary>
     Task SwapAsync(CellViewModel cell);
+
+    /// <summary>Opens the cell's page in a Browser tab, per the Open in Browser setting.</summary>
+    Task OpenInBrowserAsync(CellViewModel cell);
 
     /// <summary>The cell's page reported its title.</summary>
     void PageTitle(Guid stream, string? title);

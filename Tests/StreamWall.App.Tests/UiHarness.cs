@@ -47,6 +47,7 @@ internal sealed class UiHarness : IDisposable
     public static UiHarness Start(AppConfig? seed = null)
     {
         AppHost host = AppHost.CreateDemo(seed);
+        host.Web.Enabled = false; // headless: no WebView2; views around web views still run
         var vm = new MainWindowViewModel(host);
         var window = new MainWindow { DataContext = vm, Width = 1180, Height = 760 };
         window.Show();
@@ -105,6 +106,17 @@ internal sealed class UiHarness : IDisposable
         window.MouseMove(at, RawInputModifiers.None);
         window.MouseDown(at, MouseButton.Left, RawInputModifiers.None);
         window.MouseUp(at, MouseButton.Left, RawInputModifiers.None);
+        Settle();
+    }
+
+    public void MiddleClick(Control control)
+    {
+        var window = (Window)TopLevel.GetTopLevel(control)!;
+        Point at = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)
+            ?? throw new InvalidOperationException("Not in a window");
+        window.MouseMove(at, RawInputModifiers.None);
+        window.MouseDown(at, MouseButton.Middle, RawInputModifiers.None);
+        window.MouseUp(at, MouseButton.Middle, RawInputModifiers.None);
         Settle();
     }
 

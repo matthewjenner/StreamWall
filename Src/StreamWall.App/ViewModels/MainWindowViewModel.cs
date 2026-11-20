@@ -26,6 +26,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Title = host.Demo ? "StreamWall (demo)" : host.Dev ? "StreamWall (dev)" : "StreamWall";
         Version = "v" + AppHost.Version + (host.Dev ? " dev" : "");
         host.UpdateChanged += s => Banner = UpdateBanner.From(s);
+        host.OpenInBrowserRequested += OpenInBrowser;
         Walls = new WallsPageViewModel(host);
         Streams = new StreamsPageViewModel(host, (url, what) => SendToWallAsync(url, what));
         Settings = new SettingsPageViewModel(host);
@@ -78,6 +79,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowTab(ControlPanelTab tab) => SelectedTab = tab;
+
+    /// <summary>The window should come to the front (Open in Browser from a wall).</summary>
+    public event Action? ShowRequested;
+
+    /// <summary>A wall's Open in Browser: a new tab in front, on the Browser tab, window to the front.</summary>
+    private void OpenInBrowser(string url)
+    {
+        Browser.OpenTab(url, focus: true);
+        SelectedTab = ControlPanelTab.Browser;
+        ShowRequested?.Invoke();
+    }
 
     /// <summary>Picker, then Send to wall. Returns where it went, or null if canceled.</summary>
     public async Task<CellRef?> SendToWallAsync(string url, string what, string? pageTitle = null)
