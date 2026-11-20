@@ -35,6 +35,12 @@ public sealed record AppConfig
     /// <summary>What a cell's "Open in Browser" button does with the cell (Settings).</summary>
     public OpenInBrowserMode OpenInBrowser { get; init; } = OpenInBrowserMode.KeepOnWall;
 
+    /// <summary>Reopen the control panel where it was (Settings, default on).</summary>
+    public bool RememberControlPanel { get; init; } = true;
+
+    /// <summary>Where the control panel was last (saved after moves, resizes and on close).</summary>
+    public WindowPlacement? ControlPanel { get; init; }
+
     /// <summary>Base64 key for <see cref="Diagnostics.Pseudonymizer"/>; generated on first run.</summary>
     public string PseudonymKey { get; init; } = "";
 

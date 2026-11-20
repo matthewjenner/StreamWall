@@ -154,6 +154,9 @@
                         <Button Name="ForgetZoomButton" Content="Forget saved zoom levels" Command="{Binding ForgetZoomCommand}" />
                         <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding SavedZoomSites, StringFormat='{}{0} site(s) saved'}" />
                     </StackPanel>
+                    <TextBlock Text="Control panel" FontWeight="SemiBold" Margin="0,16,0,0" />
+                    <ToggleSwitch Name="RememberControlPanelSwitch" IsChecked="{Binding RememberControlPanel}"
+                                  OnContent="Reopen where it was (size, monitor, maximized)" OffContent="Always open centered" />
                     <TextBlock Text="Volume for new streams (0-100)" FontWeight="SemiBold" Margin="0,16,0,0" />
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Streams you send to a wall start at this volume, so an unexpectedly loud one never blasts. Adjust each on its strip." />

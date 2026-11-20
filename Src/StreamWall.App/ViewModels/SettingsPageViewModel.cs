@@ -58,6 +58,15 @@ public sealed partial class SettingsPageViewModel : ObservableObject
     private bool _restoreTabs = true;
 
     [ObservableProperty]
+    private bool _rememberControlPanel = true;
+
+    partial void OnRememberControlPanelChanged(bool value)
+    {
+        if (!_applying)
+            _host.Update(c => c with { RememberControlPanel = value });
+    }
+
+    [ObservableProperty]
     private bool _focusNewTabs;
 
     [ObservableProperty]
@@ -124,6 +133,7 @@ public sealed partial class SettingsPageViewModel : ObservableObject
             LabelMode = LabelModes.FirstOrDefault(m => m.Mode == config.LabelMode) ?? LabelModes[0];
             OpenInBrowser = OpenInBrowserModes.FirstOrDefault(m => m.Mode == config.OpenInBrowser) ?? OpenInBrowserModes[0];
             RestoreTabs = config.Browser.RestoreTabs;
+            RememberControlPanel = config.RememberControlPanel;
             FocusNewTabs = config.Browser.FocusNewTabs;
             RememberZoom = config.Browser.RememberZoom;
             SavedZoomSites = config.Browser.SiteZoom.Count;

@@ -92,6 +92,7 @@ public static class ConfigRules
             LabelMode = Enum.IsDefined(config.LabelMode) ? config.LabelMode : StreamLabelMode.PageTitle,
             Browser = BrowserRules.NormalizeBrowser(config.Browser, site.BrowserUrl),
             OpenInBrowser = Enum.IsDefined(config.OpenInBrowser) ? config.OpenInBrowser : OpenInBrowserMode.KeepOnWall,
+            ControlPanel = WindowPlacementRules.Normalize(config.ControlPanel),
             PseudonymKey = UsableKey(config.PseudonymKey) ? config.PseudonymKey : Convert.ToBase64String(Pseudonymizer.NewKey()),
         };
     }

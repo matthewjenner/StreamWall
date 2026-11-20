@@ -262,6 +262,14 @@ With streams configured in the app by the user:
 
 ### Decisions log
 
+- **2026-11-20** - The control panel remembers its placement (user request,
+  in v0.2.0 before release): `WindowPlacement` + `WindowPlacementRules`
+  (pure, unit-tested for every safety case) and a **Remember the control
+  panel's position** setting. Placement is restored after the config loads
+  (so the window may move once at startup). The home monitor is the one
+  holding most of the title bar; a straddling window belongs to the monitor
+  with more of it (a first version picked the first match, caught by a test).
+
 - **2026-11-20** - v0.1.4 from user requests: stream labels from page titles,
   with a **Stream labels** setting (page title + fill "Stream N" labels by
   default; page title new only; follow the page title; numbered). A label

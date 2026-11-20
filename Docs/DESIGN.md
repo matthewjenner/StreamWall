@@ -144,6 +144,13 @@ developer or AI assistant sees while working on the app. The repo is public.
   rename, remove, reorder, paste a URL), **Settings** (stall timeout, presets,
   pseudonyms, Sign out & clear session, which wipes the profile after
   confirmation).
+- **The control panel reopens where it was** (Settings, default on):
+  position, size, monitor and maximized, saved shortly after every move or
+  resize and on close. Minimized is never saved (it reopens at its last
+  normal place). On restore, a window whose title bar would not be on any
+  monitor (unplugged monitor, changed layout or resolution) is centered on the
+  primary monitor; one hanging off its monitor is pulled back on; one too big
+  for its monitor is shrunk to fit; one too small grows to the minimum.
 - **Diagnostics.** Per cell, structural facts only, logged on every status
   change, e.g. `wall 1 cell 3 stream-1b2c4d: playing (top: videos=1 iframes=2
   target=yes width=640 paused=no elementMuted=no volume=0.50 hostMuted=no)`.

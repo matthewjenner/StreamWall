@@ -49,6 +49,7 @@ public sealed partial class App : Application
                 DataContext = viewModel,
                 CurrentMap = () => WallMap.From(host.Config),
                 AddWall = host.AddWall,
+                Host = host,
             };
             desktop.MainWindow = window;
             if (AppArgs.ScreenshotFolder is { } folder)
@@ -75,9 +76,11 @@ public sealed partial class App : Application
     /// Loads the config (which opens the walls), then brings the control panel to the front: walls
     /// open without focus, but a fullscreen one can still cover it (found after the first update).
     /// </summary>
-    private static async Task StartAsync(AppHost host, Window controlPanel)
+    private static async Task StartAsync(AppHost host, MainWindow controlPanel)
     {
         await host.StartAsync();
+        // Back where it was last (Settings), with off-screen and size safety.
+        controlPanel.RestorePlacement();
         Dispatcher.UIThread.Post(() => Show(controlPanel), DispatcherPriority.Background);
     }
 

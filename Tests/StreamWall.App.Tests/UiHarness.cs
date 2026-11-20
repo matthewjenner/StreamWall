@@ -49,7 +49,7 @@ internal sealed class UiHarness : IDisposable
         AppHost host = AppHost.CreateDemo(seed);
         host.Web.Enabled = false; // headless: no WebView2; views around web views still run
         var vm = new MainWindowViewModel(host);
-        var window = new MainWindow { DataContext = vm, Width = 1180, Height = 760 };
+        var window = new MainWindow { DataContext = vm, Width = 1180, Height = 760, Host = host };
         window.Show();
         _ = host.StartAsync();
         var harness = new UiHarness(host, vm, window);
