@@ -29,7 +29,11 @@ public sealed partial class BrowserViewModel : ObservableObject
     {
         _host = host;
         _send = send;
-        host.ConfigChanged += _ => RestoreOnce();
+        host.ConfigChanged += _ =>
+        {
+            RestoreOnce();
+            OnPropertyChanged(nameof(TabWidth));
+        };
         if (host.IsLoaded)
             RestoreOnce();
     }
@@ -43,6 +47,9 @@ public sealed partial class BrowserViewModel : ObservableObject
 
     /// <summary>Tabs opened from links come to the front (Settings); otherwise they open in the background.</summary>
     public bool FocusNewTabs => _host.Config.Browser.FocusNewTabs;
+
+    /// <summary>Every tab's width in the strip (Settings): fixed, so tabs never move as titles change.</summary>
+    public int TabWidth => _host.Config.Browser.TabWidth;
 
     public ObservableCollection<BrowserTabViewModel> Tabs { get; } = [];
 

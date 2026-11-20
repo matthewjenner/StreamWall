@@ -11,6 +11,9 @@ public static class BrowserRules
     public const int MaxTabs = 30;
     public const double MinZoom = 0.25;
     public const double MaxZoom = 5.0;
+    public const int DefaultTabWidth = 200;
+    public const int MinTabWidth = 120;
+    public const int MaxTabWidth = 360;
 
     /// <summary>The tabs to open on launch and which is selected (empty: the app opens its start page).</summary>
     public static (IReadOnlyList<string> Tabs, int Active) StartTabs(AppConfig config)
@@ -96,6 +99,7 @@ public static class BrowserRules
         {
             Tabs = tabs,
             ActiveTab = tabs.Count == 0 ? 0 : Math.Clamp(b.ActiveTab, 0, tabs.Count - 1),
+            TabWidth = Math.Clamp(b.TabWidth, MinTabWidth, MaxTabWidth),
             SiteZoom = zoom,
         };
     }

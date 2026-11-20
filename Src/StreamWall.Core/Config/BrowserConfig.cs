@@ -21,6 +21,9 @@ public sealed record BrowserConfig
     /// <summary>Remember each site's zoom level and restore it in any tab (default on).</summary>
     public bool RememberZoom { get; init; } = true;
 
+    /// <summary>Every tab's width in the strip (fixed, so changing titles and audio never move tabs).</summary>
+    public int TabWidth { get; init; } = BrowserRules.DefaultTabWidth;
+
     /// <summary>Zoom per site: normalized host -> zoom factor (1.0 is never stored).</summary>
     public IReadOnlyDictionary<string, double> SiteZoom { get; init; } = new Dictionary<string, double>();
 }

@@ -20,7 +20,9 @@ public sealed class BrowserView : DockPanel
     private static readonly IBrush SelectedTabBrush = new SolidColorBrush(Color.FromRgb(0x2B, 0x31, 0x3A));
     private static readonly IBrush TabBrush = new SolidColorBrush(Color.FromRgb(0x17, 0x1B, 0x21));
 
-    private readonly StackPanel _tabStrip = new() { Orientation = Orientation.Horizontal, Spacing = 2 };
+    private readonly StackPanel _tabStrip = new() { Orientation = Orientation.Horizontal, Spacing = 2, Name = "TabStrip" };
+    private readonly ScrollViewer _stripScroller;
+    private readonly Dictionary<Guid, TabHeader> _headers = [];
     private readonly Button _newTab = Icons.Button(Icons.Add, "New tab", "NewTabButton");
     private readonly Button _back = Icons.Button(Icons.Back, "Back", "BackButton");
     private readonly Button _forward = Icons.Button(Icons.Forward, "Forward", "ForwardButton");
@@ -39,17 +41,26 @@ public sealed class BrowserView : DockPanel
 
     public BrowserView()
     {
+        _stripScroller = new ScrollViewer
+        {
+            Name = "TabStripScroller",
+            Content = _tabStrip,
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden,
+            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+        };
         ToolTip.SetTip(_zoomText, "Reset zoom to 100%");
 
         var strip = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
         DockPanel.SetDock(_newTab, Dock.Right);
         strip.Children.Add(_newTab);
-        strip.Children.Add(new ScrollViewer
+        // Tabs past the width scroll sideways with the mouse wheel; no scroll bar is ever shown.
+        strip.Children.Add(_stripScroller);
+        _stripScroller.AddHandler(PointerWheelChangedEvent, (_, e) =>
         {
-            Content = _tabStrip,
-            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-        });
+            double step = (e.Delta.Y + e.Delta.X) * 60;
+            _stripScroller.Offset = new Vector(Math.Max(0, _stripScroller.Offset.X - step), 0);
+            e.Handled = true;
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
 
         var toolbar = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
         var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(0, 0, 6, 0) };
@@ -140,9 +151,12 @@ public sealed class BrowserView : DockPanel
     {
         if (e.PropertyName == nameof(BrowserViewModel.SelectedTab))
             Select(_vm?.SelectedTab);
+        else if (e.PropertyName == nameof(BrowserViewModel.TabWidth))
+            ApplyTabWidth();
         else if (e.PropertyName == nameof(BrowserViewModel.Message))
             _message.Text = _vm?.Message;
     }
+
 
     private void OnTabsChanged(object? sender, NotifyCollectionChangedEventArgs e) => SyncTabs();
 
@@ -162,11 +176,10 @@ public sealed class BrowserView : DockPanel
             var view = new BrowserTabView(tab, _vm) { IsVisible = false };
             _views[tab.Id] = view;
             _body.Children.Add(view);
-            tab.PropertyChanged += (_, _) => RenderStrip();
             if (tab.LoadNow && IsEffectivelyVisible)
                 view.EnsureCreated();
         }
-        RenderStrip();
+        SyncStrip();
     }
 
     private void Select(BrowserTabViewModel? tab)
@@ -180,7 +193,9 @@ public sealed class BrowserView : DockPanel
             view.IsVisible = view.Tab == tab;
         ShowSelected();
         SyncToolbar();
-        RenderStrip();
+        // The selected tab is always scrolled into view.
+        if (tab is not null && _headers.TryGetValue(tab.Id, out TabHeader? header))
+            header.BringIntoView();
     }
 
     private void ShowSelected()
@@ -200,63 +215,108 @@ public sealed class BrowserView : DockPanel
             _address.Text = _selected?.Url;
     }
 
-    /// <summary>The tab strip: one header per tab (title, audio, close).</summary>
-    private void RenderStrip()
+    /// <summary>
+    /// The tab strip: one header per tab, created once and updated in place (a changing title or
+    /// audio never rebuilds the strip), in the tabs' order.
+    /// </summary>
+    private void SyncStrip()
     {
         if (_vm is null)
             return;
+        foreach (Guid gone in _headers.Keys.Where(id => _vm.Tabs.All(t => t.Id != id)).ToList())
+        {
+            _headers[gone].Detach();
+            _headers.Remove(gone);
+        }
         _tabStrip.Children.Clear();
         foreach (BrowserTabViewModel tab in _vm.Tabs)
-            _tabStrip.Children.Add(Header(tab));
+        {
+            if (!_headers.TryGetValue(tab.Id, out TabHeader? header))
+            {
+                header = new TabHeader(tab, _vm);
+                _headers[tab.Id] = header;
+            }
+            _tabStrip.Children.Add(header);
+        }
     }
 
-    private Control Header(BrowserTabViewModel tab)
+    private void ApplyTabWidth()
     {
-        BrowserViewModel vm = _vm!;
-        var title = new TextBlock
+        foreach (TabHeader header in _headers.Values)
+            header.Width = _vm?.TabWidth ?? 200;
+    }
+
+    /// <summary>
+    /// One tab in the strip: fixed width (Settings), the speaker's slot always reserved (shown only
+    /// while the tab plays or is muted) and the title trimmed, so nothing about a tab can change its
+    /// size or push its neighbors around. Left-click selects; middle-click closes.
+    /// </summary>
+    private sealed class TabHeader : Border
+    {
+        private readonly BrowserTabViewModel _tab;
+        private readonly TextBlock _title = new()
         {
-            Text = tab.Title,
-            MaxWidth = 180,
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(4, 0),
         };
-        var audio = Icons.Button(tab.IsMuted ? Icons.Mute : Icons.Volume, tab.IsMuted ? "Unmute tab" : "Mute tab", "TabAudioButton");
-        audio.IsVisible = tab.IsPlayingAudio || tab.IsMuted;
-        audio.Command = tab.ToggleMuteCommand;
-        var close = Icons.Button(Icons.Close, "Close tab", "TabCloseButton");
-        close.Command = vm.CloseTabCommand;
-        close.CommandParameter = tab;
+        private readonly Button _audio = Icons.Button(Icons.Volume, "Mute tab", "TabAudioButton");
+        private readonly Button _close = Icons.Button(Icons.Close, "Close tab", "TabCloseButton");
 
-        var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        row.Children.Add(audio);
-        row.Children.Add(title);
-        row.Children.Add(close);
-        var header = new Border
+        public TabHeader(BrowserTabViewModel tab, BrowserViewModel vm)
         {
-            Name = "TabHeader",
-            Tag = tab,
-            Child = row,
-            Padding = new Thickness(6, 2),
-            CornerRadius = new CornerRadius(6, 6, 0, 0),
-            Background = tab.IsSelected ? SelectedTabBrush : TabBrush,
-            Cursor = new Cursor(StandardCursorType.Hand),
-        };
-        ToolTip.SetTip(header, tab.Title);
-        header.PointerPressed += (_, e) =>
-        {
-            if (e.GetCurrentPoint(header).Properties.IsLeftButtonPressed)
-                vm.SelectTabCommand.Execute(tab);
-        };
-        // Middle-click closes, like a browser.
-        header.PointerReleased += (_, e) =>
-        {
-            if (e.InitialPressMouseButton == MouseButton.Middle)
+            _tab = tab;
+            Name = "TabHeader";
+            Tag = tab;
+            Width = vm.TabWidth;
+            Padding = new Thickness(4, 2);
+            CornerRadius = new CornerRadius(6, 6, 0, 0);
+            Cursor = new Cursor(StandardCursorType.Hand);
+
+            _audio.Command = tab.ToggleMuteCommand;
+            _close.Command = vm.CloseTabCommand;
+            _close.CommandParameter = tab;
+            var row = new DockPanel { VerticalAlignment = VerticalAlignment.Center };
+            DockPanel.SetDock(_audio, Dock.Left);
+            DockPanel.SetDock(_close, Dock.Right);
+            row.Children.Add(_audio);
+            row.Children.Add(_close);
+            row.Children.Add(_title);
+            Child = row;
+
+            PointerPressed += (_, e) =>
             {
-                e.Handled = true;
-                vm.CloseTabCommand.Execute(tab);
-            }
-        };
-        return header;
+                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+                    vm.SelectTabCommand.Execute(tab);
+            };
+            // Middle-click closes, like a browser.
+            PointerReleased += (_, e) =>
+            {
+                if (e.InitialPressMouseButton == MouseButton.Middle)
+                {
+                    e.Handled = true;
+                    vm.CloseTabCommand.Execute(tab);
+                }
+            };
+            tab.PropertyChanged += OnTabChanged;
+            Update();
+        }
+
+        public void Detach() => _tab.PropertyChanged -= OnTabChanged;
+
+        private void OnTabChanged(object? sender, PropertyChangedEventArgs e) => Update();
+
+        private void Update()
+        {
+            _title.Text = _tab.Title;
+            ToolTip.SetTip(this, _tab.Title);
+            bool audible = _tab.IsPlayingAudio || _tab.IsMuted;
+            // The slot stays; only the icon appears, so the title never shifts.
+            _audio.Opacity = audible ? 1 : 0;
+            _audio.IsHitTestVisible = audible;
+            _audio.Content = _tab.IsMuted ? Icons.Mute : Icons.Volume;
+            ToolTip.SetTip(_audio, _tab.IsMuted ? "Unmute tab" : "Mute tab");
+            Background = _tab.IsSelected ? SelectedTabBrush : TabBrush;
+        }
     }
 }

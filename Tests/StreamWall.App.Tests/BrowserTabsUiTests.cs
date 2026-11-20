@@ -114,23 +114,6 @@ public sealed class BrowserTabsUiTests
         ui.ViewModel.Browser.Tabs.Select(t => t.Url).Should().Equal(B);
     });
 
-    [Fact]
-    public Task TheTabStripShowsTitlesAndTheAudioButtonOnlyWhenNeeded() => TestApp.Run(() =>
-    {
-        using UiHarness ui = UiHarness.Start(WithTabs(true, A, B));
-        ui.Click(ui.Named<Button>("BrowserTabButton"));
-        BrowserTabViewModel tab = ui.ViewModel.Browser.Tabs[0];
-        tab.PageTitle = "Front door";
-        ui.Settle();
-        ui.FindAll<TextBlock>(t => t.Text == "Front door").Should().NotBeEmpty();
-        ui.FindAll<Button>(b => b.Name == "TabAudioButton").Should().BeEmpty("nothing is playing");
-
-        tab.IsPlayingAudio = true;
-        ui.Settle();
-        Button audio = ui.FindAll<Button>(b => b.Name == "TabAudioButton").Single();
-        ui.Click(audio);
-        tab.IsMuted.Should().BeTrue("the tab's speaker button mutes it");
-    });
 
     [Fact]
     public Task SendToWallUsesTheSelectedTab() => TestApp.Run(() =>

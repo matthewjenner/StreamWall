@@ -26,6 +26,8 @@ public static class Icons
     public static readonly string Forward = Glyph(0xE72A);
     public static readonly string ZoomIn = Glyph(0xE8A3);
     public static readonly string ZoomOut = Glyph(0xE71F);
+    public static readonly string Pin = Glyph(0xE718);
+    public static readonly string Pinned = Glyph(0xE840);
 
     /// <summary>A small, flat icon button with a tooltip (the strip's controls).</summary>
     public static Button Button(string glyph, string tip, string name) => Style(new Button(), glyph, tip, name);

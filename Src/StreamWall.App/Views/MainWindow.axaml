@@ -6,13 +6,23 @@
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
         Width="1180" Height="760" MinWidth="820" MinHeight="520"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Topmost="{Binding ControlPanelOnTop}">
     <!--
       The control panel. Tabs are buttons over stacked pages (not a TabControl) so the Browser's
       web view stays alive while another tab is shown.
     -->
     <DockPanel>
         <Border DockPanel.Dock="Top" Padding="16,12,16,8">
+            <DockPanel>
+                <ToggleButton DockPanel.Dock="Right" Name="PinButton" IsChecked="{Binding ControlPanelOnTop}"
+                              ToolTip.Tip="{Binding PinTip}" Width="34" Height="30" Padding="0" Background="Transparent"
+                              HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <Panel>
+                        <TextBlock Text="{x:Static v:Icons.Pin}" FontFamily="{x:Static v:Icons.Font}" FontSize="15" IsVisible="{Binding !ControlPanelOnTop}" />
+                        <TextBlock Text="{x:Static v:Icons.Pinned}" FontFamily="{x:Static v:Icons.Font}" FontSize="15" IsVisible="{Binding ControlPanelOnTop}" />
+                    </Panel>
+                </ToggleButton>
             <StackPanel Orientation="Horizontal" Spacing="24">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <TextBlock Text="StreamWall" FontSize="22" FontWeight="SemiBold" />
@@ -29,6 +39,7 @@
                             Command="{Binding ShowTabCommand}" CommandParameter="{x:Static vm:ControlPanelTab.Settings}" />
                 </StackPanel>
             </StackPanel>
+            </DockPanel>
         </Border>
 
         <Border DockPanel.Dock="Top" Name="UpdateBanner" Margin="16,0,16,8" Padding="12,6" CornerRadius="6"
@@ -148,13 +159,28 @@
                                   OnContent="Reopen all tabs on launch" OffContent="Start with one tab (the last page)" />
                     <ToggleSwitch Name="FocusNewTabsSwitch" IsChecked="{Binding FocusNewTabs}"
                                   OnContent="Tabs opened from links come to the front" OffContent="Tabs opened from links load in the background" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Tab width" VerticalAlignment="Center" />
+                        <NumericUpDown Name="TabWidthBox" Value="{Binding TabWidth}" Minimum="120" Maximum="360" Increment="10" Width="150" />
+                        <TextBlock Text="(every tab the same width, so tabs never move as titles change)" VerticalAlignment="Center" Opacity="0.7" />
+                    </StackPanel>
                     <ToggleSwitch Name="RememberZoomSwitch" IsChecked="{Binding RememberZoom}"
                                   OnContent="Remember zoom per site" OffContent="Do not remember zoom" />
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button Name="ForgetZoomButton" Content="Forget saved zoom levels" Command="{Binding ForgetZoomCommand}" />
                         <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="{Binding SavedZoomSites, StringFormat='{}{0} site(s) saved'}" />
                     </StackPanel>
+                    <TextBlock Text="Updates" FontWeight="SemiBold" />
+                    <TextBlock Name="VersionText" Text="{Binding VersionText}" />
+                    <TextBlock Name="UpdateStatusText" Text="{Binding Update.Text}" TextWrapping="Wrap" Opacity="0.8" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Name="CheckForUpdatesButton" Content="Check for updates" Command="{Binding CheckForUpdatesCommand}" />
+                        <Button Name="SettingsInstallUpdateButton" Content="Restart and install" Classes="accent"
+                                Command="{Binding InstallUpdateCommand}" IsVisible="{Binding Update.CanInstall}" />
+                    </StackPanel>
                     <TextBlock Text="Control panel" FontWeight="SemiBold" Margin="0,16,0,0" />
+                    <ToggleSwitch Name="OnTopSwitch" IsChecked="{Binding ControlPanelOnTop}"
+                                  OnContent="Keep on top of other windows (also the pin in the header)" OffContent="Normal window (the pin in the header keeps it on top)" />
                     <ToggleSwitch Name="RememberControlPanelSwitch" IsChecked="{Binding RememberControlPanel}"
                                   OnContent="Reopen where it was (size, monitor, maximized)" OffContent="Always open centered" />
                     <TextBlock Text="Volume for new streams (0-100)" FontWeight="SemiBold" Margin="0,16,0,0" />

@@ -262,6 +262,16 @@ With streams configured in the app by the user:
 
 ### Decisions log
 
+- **2026-11-20** - v0.2.1 from using v0.2.0: a **pin** in the control panel's
+  header (and a Settings switch, kept in step) sets `Topmost`, so the panel is
+  never lost behind a wall. Settings > Updates: version, status
+  (`UpdateStatusText`, tested for every state) and Check for updates. Tabs:
+  fixed width (**Tab width** setting, 120-360, default 200), the speaker slot
+  always reserved (opacity, not visibility), headers cached and updated in
+  place instead of the strip being rebuilt on every title change, the scroll
+  bar hidden with the wheel scrolling sideways, and the selected tab brought
+  into view.
+
 - **2026-11-20** - The control panel remembers its placement (user request,
   in v0.2.0 before release): `WindowPlacement` + `WindowPlacementRules`
   (pure, unit-tested for every safety case) and a **Remember the control

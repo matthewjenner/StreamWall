@@ -64,6 +64,12 @@ developer or AI assistant sees while working on the app. The repo is public.
     video). Closing the last tab leaves a fresh one. Settings: **reopen all
     tabs on launch** (default) or start with one tab at the last page;
     **tabs from links load in the background** (default) or come to the front.
+    Tabs never move under the mouse: every tab has the same fixed width
+    (Settings, **Tab width**, default 200), the speaker's slot is always
+    reserved, and titles are trimmed, so changing titles and intermittent
+    audio cannot resize anything. Tabs past the window's width scroll sideways
+    with the mouse wheel; no scroll bar is shown; the selected tab is always
+    scrolled into view.
   - **Zoom per site:** Ctrl+wheel, Ctrl+plus/minus or the toolbar's - 100% +
     (click the percentage to reset). The level is remembered per site and
     restored in any tab that opens one of its pages. Settings: **remember zoom
@@ -144,6 +150,11 @@ developer or AI assistant sees while working on the app. The repo is public.
   rename, remove, reorder, paste a URL), **Settings** (stall timeout, presets,
   pseudonyms, Sign out & clear session, which wipes the profile after
   confirmation).
+- **Keep the control panel on top:** a pin button in its header toggles it
+  above every other window, walls included (also in Settings; remembered).
+- **Check for updates:** Settings > Updates shows the version and update
+  status, with **Check for updates** (instead of waiting for the hourly check)
+  and **Restart and install** once one is downloaded.
 - **The control panel reopens where it was** (Settings, default on):
   position, size, monitor and maximized, saved shortly after every move or
   resize and on close. Minimized is never saved (it reopens at its last

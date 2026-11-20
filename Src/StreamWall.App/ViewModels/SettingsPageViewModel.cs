@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StreamWall.App.Services;
 using StreamWall.Core.Config;
+using StreamWall.Core.Presentation;
+using StreamWall.Core.Updates;
 
 namespace StreamWall.App.ViewModels;
 
@@ -18,9 +20,52 @@ public sealed partial class SettingsPageViewModel : ObservableObject
     {
         _host = host;
         host.ConfigChanged += Apply;
+        host.UpdateChanged += ShowUpdate;
+        ShowUpdate(host.Updates.State);
         if (host.IsLoaded)
             Apply(host.Config);
     }
+
+    // ---- Updates ----
+
+    public string VersionText => "StreamWall v" + AppHost.Version + (_host.Dev ? " (dev copy)" : _host.Demo ? " (demo)" : "");
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand), nameof(InstallUpdateCommand))]
+    private UpdateStatusText _update = UpdateStatusText.From(new UpdateState(UpdateStatus.Idle));
+
+    private bool CanCheck => Update.CanCheck;
+
+    private bool CanInstall => Update.CanInstall;
+
+    /// <summary>Checks now (and downloads what it finds) instead of waiting for the hourly check.</summary>
+    [RelayCommand(CanExecute = nameof(CanCheck))]
+    private Task CheckForUpdates() => _host.Updates.CheckAsync();
+
+    [RelayCommand(CanExecute = nameof(CanInstall))]
+    private void InstallUpdate() => _host.Updates.Install();
+
+    private void ShowUpdate(UpdateState state) => Update = UpdateStatusText.From(state);
+
+    // ---- Control panel and Browser tab layout ----
+
+    [ObservableProperty]
+    private bool _controlPanelOnTop;
+
+    partial void OnControlPanelOnTopChanged(bool value)
+    {
+        if (!_applying)
+            _host.Update(c => c with { ControlPanelOnTop = value });
+    }
+
+    [ObservableProperty]
+    private decimal _tabWidth = BrowserRules.DefaultTabWidth;
+
+    public static int MinTabWidth => BrowserRules.MinTabWidth;
+
+    public static int MaxTabWidth => BrowserRules.MaxTabWidth;
+
+    partial void OnTabWidthChanged(decimal value) => ChangeBrowser(b => b with { TabWidth = (int)value });
 
     [ObservableProperty]
     private decimal _stallTimeoutSeconds = ConfigRules.DefaultStallTimeoutSeconds;
@@ -134,6 +179,8 @@ public sealed partial class SettingsPageViewModel : ObservableObject
             OpenInBrowser = OpenInBrowserModes.FirstOrDefault(m => m.Mode == config.OpenInBrowser) ?? OpenInBrowserModes[0];
             RestoreTabs = config.Browser.RestoreTabs;
             RememberControlPanel = config.RememberControlPanel;
+            ControlPanelOnTop = config.ControlPanelOnTop;
+            TabWidth = config.Browser.TabWidth;
             FocusNewTabs = config.Browser.FocusNewTabs;
             RememberZoom = config.Browser.RememberZoom;
             SavedZoomSites = config.Browser.SiteZoom.Count;

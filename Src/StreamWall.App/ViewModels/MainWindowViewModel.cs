@@ -66,6 +66,21 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void InstallUpdate() => _host.Updates.Install();
 
+    /// <summary>The header's pin: keep the control panel above other windows, walls included.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PinTip))]
+    private bool _controlPanelOnTop;
+
+    private bool _applying;
+
+    public string PinTip => ControlPanelOnTop ? "Stop keeping StreamWall on top" : "Keep StreamWall on top of other windows";
+
+    partial void OnControlPanelOnTopChanged(bool value)
+    {
+        if (!_applying)
+            _host.Update(c => c with { ControlPanelOnTop = value });
+    }
+
     [ObservableProperty]
     private string _status = "Loading...";
 
@@ -103,6 +118,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void Apply(AppConfig config)
     {
         IsLoading = false;
+        _applying = true;
+        ControlPanelOnTop = config.ControlPanelOnTop;
+        _applying = false;
         int streams = config.Streams.Count;
         int placed = config.Walls.Sum(w => w.Cells.Count(c => c is not null));
         Status = string.Create(CultureInfo.InvariantCulture,

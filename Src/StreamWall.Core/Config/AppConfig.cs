@@ -38,6 +38,9 @@ public sealed record AppConfig
     /// <summary>Reopen the control panel where it was (Settings, default on).</summary>
     public bool RememberControlPanel { get; init; } = true;
 
+    /// <summary>Keep the control panel above other windows, walls included (the header's pin; Settings).</summary>
+    public bool ControlPanelOnTop { get; init; }
+
     /// <summary>Where the control panel was last (saved after moves, resizes and on close).</summary>
     public WindowPlacement? ControlPanel { get; init; }
 
