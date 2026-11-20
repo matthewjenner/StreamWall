@@ -113,23 +113,32 @@ public sealed class AppHost : IDisposable
     /// </summary>
     public void Update(Func<AppConfig, AppConfig> change)
     {
-        Config = ConfigRules.Normalize(change(Config));
+        AppConfig changed = change(Config);
+        // "No change" (the same instance back, e.g. a page title that relabels nothing) is free.
+        if (ReferenceEquals(changed, Config))
+            return;
+        Config = ConfigRules.Normalize(changed);
         Repository.Register(Config);
         ConfigChanged?.Invoke(Config);
         ScheduleSave();
     }
 
+    /// <summary>Asks every open wall to reload its cells (staggered by the wall manager).</summary>
+    public void ReloadAll() => ReloadAllRequested?.Invoke();
+
+    public event Action? ReloadAllRequested;
+
     /// <summary>
     /// Send to wall: puts <paramref name="url"/> in <paramref name="cell"/> (adding it to the library
     /// if new) and opens that wall if it was closed.
     /// </summary>
-    public void SendToWall(string url, CellRef cell)
+    public void SendToWall(string url, CellRef cell, string? pageTitle = null)
     {
         Guid streamId = Guid.Empty;
         Guid? replaced = null;
         Update(c =>
         {
-            (AppConfig sent, streamId, replaced) = WallLayout.SendToWall(c, url, cell);
+            (AppConfig sent, streamId, replaced) = WallLayout.SendToWall(c, url, cell, pageTitle);
             return WallLayout.UpdateWall(sent, cell.WallId, w => w with { IsOpen = true });
         });
         Log.StreamSent(WallNumber(cell.WallId), cell.Index + 1, streamId, replaced is not null);

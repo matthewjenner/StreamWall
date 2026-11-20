@@ -8,16 +8,18 @@ namespace StreamWall.App.ViewModels;
 /// One open wall: its grid and cells. <see cref="Apply"/> updates cells in place, so only a cell whose
 /// stream changed reloads; a new grid size rebuilds the cells (<see cref="GridChanged"/>).
 /// </summary>
-public sealed class WallViewModel
+public sealed class WallViewModel : ICellActions
 {
     private readonly AppHost _host;
     private readonly Func<TimeSpan> _nextStartDelay;
+    private readonly Func<CellViewModel, Task<CellRef?>> _pickSwapTarget;
 
-    public WallViewModel(AppHost host, Guid wallId, Func<TimeSpan> nextStartDelay)
+    public WallViewModel(AppHost host, Guid wallId, Func<TimeSpan> nextStartDelay, Func<CellViewModel, Task<CellRef?>>? pickSwapTarget = null)
     {
         _host = host;
         Id = wallId;
         _nextStartDelay = nextStartDelay;
+        _pickSwapTarget = pickSwapTarget ?? (_ => Task.FromResult<CellRef?>(null));
     }
 
     public Guid Id { get; }
@@ -89,7 +91,7 @@ public sealed class WallViewModel
         {
             Cells.Clear();
             for (int i = 0; i < wall.CellCount; i++)
-                Cells.Add(new CellViewModel(new CellRef(Id, i), Number, ClearCell, SetVolume, SetMuted) { StartDelay = _nextStartDelay() });
+                Cells.Add(new CellViewModel(new CellRef(Id, i), Number, this) { StartDelay = _nextStartDelay() });
         }
         for (int i = 0; i < Cells.Count; i++)
         {
@@ -105,13 +107,39 @@ public sealed class WallViewModel
             TitleChanged?.Invoke();
     }
 
-    private void ClearCell(CellViewModel cell)
+    /// <summary>Reload all: every cell with a stream, staggered like startup.</summary>
+    public int ReloadAll()
+    {
+        int count = 0;
+        foreach (CellViewModel cell in Cells.Where(c => !c.IsEmpty))
+        {
+            cell.RequestReload(_nextStartDelay());
+            count++;
+        }
+        return count;
+    }
+
+    // ICellActions: what a cell's strip asks for.
+
+    public void Clear(CellViewModel cell)
     {
         _host.Update(c => WallLayout.Clear(c, cell.Ref));
         _host.Log.CellCleared(Number, cell.Number);
     }
 
-    private void SetVolume(Guid stream, int volume) => _host.Update(c => WallLayout.UpdateStream(c, stream, s => s with { Volume = volume }));
+    public void SetVolume(Guid stream, int volume) => _host.Update(c => WallLayout.UpdateStream(c, stream, s => s with { Volume = volume }));
 
-    private void SetMuted(Guid stream, bool muted) => _host.Update(c => WallLayout.UpdateStream(c, stream, s => s with { Muted = muted }));
+    public void SetMuted(Guid stream, bool muted) => _host.Update(c => WallLayout.UpdateStream(c, stream, s => s with { Muted = muted }));
+
+    public void Reloaded(CellViewModel cell) => _host.Log.CellReloaded(Number, cell.Number);
+
+    public async Task SwapAsync(CellViewModel cell)
+    {
+        if (await _pickSwapTarget(cell) is not CellRef target || target == cell.Ref)
+            return;
+        _host.Update(c => WallLayout.Swap(c, cell.Ref, target));
+        _host.Log.CellsSwapped(Number, cell.Number, _host.WallNumber(target.WallId), target.Index + 1);
+    }
+
+    public void PageTitle(Guid stream, string? title) => _host.Update(c => StreamLabels.ApplyPageTitle(c, stream, title));
 }

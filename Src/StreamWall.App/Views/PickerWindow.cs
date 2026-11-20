@@ -16,15 +16,22 @@ public sealed class PickerWindow : Window
 {
     private readonly Func<WallMap> _addWall;
     private readonly string _what;
+    private readonly CellRef? _swapFrom;
     private readonly StackPanel _root = new() { Margin = new Thickness(20), Spacing = 14 };
     private WallMap _map;
 
-    public PickerWindow(WallMap map, string what, Func<WallMap> addWall)
+    /// <param name="swapFrom">
+    /// Swap mode: the cell whose stream is being swapped. It is marked and not choosable, any other
+    /// cell is chosen with one click (no replace confirm: a swap loses nothing), and "next empty"
+    /// moves the stream there.
+    /// </param>
+    public PickerWindow(WallMap map, string what, Func<WallMap> addWall, CellRef? swapFrom = null)
     {
         _map = map;
         _what = what;
         _addWall = addWall;
-        Title = "Send to wall";
+        _swapFrom = swapFrom;
+        Title = swapFrom is null ? "Send to wall" : "Swap";
         SizeToContent = SizeToContent.WidthAndHeight;
         CanResize = false;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -36,7 +43,9 @@ public sealed class PickerWindow : Window
     /// <summary>For tests and the UI: pick a cell as if clicked.</summary>
     internal void Choose(WallMapCell cell)
     {
-        if (cell.IsEmpty)
+        if (cell.Ref == _swapFrom)
+            return;
+        if (cell.IsEmpty || _swapFrom is not null)
             Close(cell.Ref);
         else
             ShowConfirm(cell);
@@ -47,7 +56,12 @@ public sealed class PickerWindow : Window
     private void ShowMap()
     {
         _root.Children.Clear();
-        _root.Children.Add(new TextBlock { Text = "Send " + _what + " to:", FontSize = 16, FontWeight = FontWeight.SemiBold });
+        _root.Children.Add(new TextBlock
+        {
+            Text = _swapFrom is null ? "Send " + _what + " to:" : "Swap " + _what + " with:",
+            FontSize = 16,
+            FontWeight = FontWeight.SemiBold,
+        });
 
         if (_map.Walls.Count == 0)
         {
@@ -60,14 +74,15 @@ public sealed class PickerWindow : Window
         {
             var walls = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 24 };
             foreach (WallMapWall wall in _map.Walls)
-                walls.Children.Add(new WallMapView(wall, pick: true, Choose));
+                walls.Children.Add(new WallMapView(wall, pick: true, Choose, highlight: _swapFrom));
             _root.Children.Add(walls);
         }
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
         if (_map.NextEmpty is CellRef next)
         {
-            var nextButton = new Button { Content = "Next empty cell (" + _map.Describe(next) + ")", Name = "NextEmptyButton", Classes = { "accent" } };
+            string text = (_swapFrom is null ? "Next empty cell (" : "Move to next empty cell (") + _map.Describe(next) + ")";
+            var nextButton = new Button { Content = text, Name = "NextEmptyButton", Classes = { "accent" } };
             nextButton.Click += (_, _) => Close(next);
             buttons.Children.Add(nextButton);
         }

@@ -23,7 +23,7 @@ Stop for review after each phase.
 | M1    | Spike: check every TECHARCH "WebView2 requirement" with `NativeWebView`; video-only on a local test page; 12 cells measured | Done        |
 | M2    | Scaffold (Klakr layout, Updatr/RingView standards): Core, Platform, App, tests, conventions, DiagLog/redactor/pseudonyms, config vault, gitleaks, CI | Done        |
 | M3    | Browser and walls: shared environment, Browser tab (sign-in), 1-3 wall windows with N x M grids and monitor choice, Send to wall picker across walls, clear, stream library, video-only and audio scripts, demo site | Done        |
-| M4    | Wall polish: presets, full cell strips, expand, drag-to-swap, always-on-top / borderless / saved bounds, global hotkeys, 12-cell measurement | Not started |
+| M4    | Wall polish: presets, expand, always-on-top, global hotkeys, 12-cell measurement (swap, reload, icon strip and saved bounds done early) | In progress |
 | M5    | Resilience: cell watchdog (stall or no video -> reload with backoff), one "cells have no video" notice, Reload all, crash recovery, throttling verified | Not started |
 | M6    | Desktop and release: tray, profile hygiene, README numbers (single instance, Velopack, release workflow and v0.1.0 done early) | In progress |
 
@@ -231,7 +231,32 @@ With streams configured in the app by the user:
   expand, drag-to-swap, hotkeys, always-on-top (M4), Sign out & clear session
   (M6).
 
+### Next (v0.2.0, planned with the user 2026-11-20)
+
+- **Browser tabs:** each tab its own web view on the shared profile; a tab
+  strip with title, a playing-audio mute button, close (x and middle-click)
+  and new tab; middle-click, Ctrl+click and new-window links open a tab; the
+  context menu says "Open link in new tab". Send to wall and zoom act on the
+  current tab. Setting: **restore tabs on launch** (default on).
+- **Zoom per site:** remember the zoom level per site and restore it in any
+  tab (controller ZoomFactor via the raw COM interface; CSS zoom fallback),
+  with a "- 130% +" control. Setting: **remember zoom per site** (default on).
+- **Open in Browser** strip button: the cell's page in a new tab, control
+  panel to the front. Setting: **keep on wall** (default) / **move off wall** /
+  **ask each time**.
+- Every setting gets normalization, round-trip and behavior tests.
+
 ### Decisions log
+
+- **2026-11-20** - v0.1.4 from user requests: stream labels from page titles,
+  with a **Stream labels** setting (page title + fill "Stream N" labels by
+  default; page title new only; follow the page title; numbered). A label
+  typed in Streams is marked `LabelEdited` and never replaced. A **swap**
+  button (picker in swap mode, any wall, no confirm) replaces drag-to-swap;
+  **reload** per cell and **Reload all** (staggered). Strip controls are
+  standard Windows icon buttons (Segoe Fluent Icons / MDL2 glyphs) with
+  tooltips, per the user's preference for options and icons over menus.
+  `AppHost.Update` skips changes that return the same config (title reports).
 
 - **2026-11-13** - From using v0.1.2 (released as v0.1.3): a windowed wall is a
   normal window (title bar, movable, resizable) that saves its bounds after a

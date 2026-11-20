@@ -105,9 +105,9 @@ public static class WallLayout
 
     /// <summary>
     /// The library entry for <paramref name="url"/>: an existing one with the same address, or a new
-    /// one labeled "Stream N" (the lowest unused N).
+    /// one labeled by <see cref="StreamLabels.ForNewStream"/> (the page title, or "Stream N").
     /// </summary>
-    public static (AppConfig Config, Guid StreamId, bool Added) AddOrReuseStream(AppConfig config, string url)
+    public static (AppConfig Config, Guid StreamId, bool Added) AddOrReuseStream(AppConfig config, string url, string? pageTitle = null)
     {
         if (!ConfigRules.IsValidUrl(url))
             throw new ArgumentException("Not an http(s) URL.", nameof(url));
@@ -118,7 +118,7 @@ public static class WallLayout
         var stream = new StreamConfig
         {
             Url = url.Trim(),
-            Label = NextName(config.Streams.Select(s => s.Label), "Stream"),
+            Label = StreamLabels.ForNewStream(config, pageTitle),
             Volume = config.NewStreamVolume,
         };
         return (ConfigRules.Normalize(config with { Streams = [.. config.Streams, stream] }), stream.Id, true);
@@ -135,11 +135,25 @@ public static class WallLayout
     /// Send to wall: the page at <paramref name="url"/> goes into <paramref name="cell"/>, joining
     /// the library if it is new. Returns the stream that was in the cell before, if any.
     /// </summary>
-    public static (AppConfig Config, Guid StreamId, Guid? Replaced) SendToWall(AppConfig config, string url, CellRef cell)
+    public static (AppConfig Config, Guid StreamId, Guid? Replaced) SendToWall(AppConfig config, string url, CellRef cell, string? pageTitle = null)
     {
-        (AppConfig withStream, Guid streamId, _) = AddOrReuseStream(config, url);
+        (AppConfig withStream, Guid streamId, _) = AddOrReuseStream(config, url, pageTitle);
         Guid? replaced = StreamAt(withStream, cell);
         return (Assign(withStream, cell, streamId), streamId, replaced == streamId ? null : replaced);
+    }
+
+    /// <summary>
+    /// Swaps what two cells show, on the same wall or across walls. Swapping with an empty cell moves
+    /// the stream there; swapping a cell with itself changes nothing.
+    /// </summary>
+    /// <exception cref="ArgumentException">Either cell does not exist.</exception>
+    public static AppConfig Swap(AppConfig config, CellRef a, CellRef b)
+    {
+        if (a == b)
+            return config;
+        Guid? first = StreamAt(config, a);
+        Guid? second = StreamAt(config, b);
+        return Assign(Assign(config, a, second), b, first);
     }
 
     /// <summary>

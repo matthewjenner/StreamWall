@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using StreamWall.Core.Config;
 using StreamWall.Core.Presentation;
 
 namespace StreamWall.App.Views;
@@ -13,7 +14,7 @@ namespace StreamWall.App.Views;
 /// </summary>
 public sealed class WallMapView : StackPanel
 {
-    public WallMapView(WallMapWall wall, bool pick, Action<WallMapCell> chosen, Action<WallMapCell>? clear = null)
+    public WallMapView(WallMapWall wall, bool pick, Action<WallMapCell> chosen, Action<WallMapCell>? clear = null, CellRef? highlight = null)
     {
         Spacing = 4;
         Children.Add(new TextBlock
@@ -55,6 +56,10 @@ public sealed class WallMapView : StackPanel
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
                 IsHitTestVisible = pick || !cell.IsEmpty,
+                // The cell being swapped: marked, not choosable.
+                IsEnabled = cell.Ref != highlight,
+                BorderBrush = cell.Ref == highlight ? Brushes.DodgerBlue : null,
+                BorderThickness = cell.Ref == highlight ? new Thickness(2) : default,
                 Tag = cell,
             };
             if (pick)

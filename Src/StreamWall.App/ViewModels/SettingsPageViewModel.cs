@@ -25,6 +25,24 @@ public sealed partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private decimal _stallTimeoutSeconds = ConfigRules.DefaultStallTimeoutSeconds;
 
+    /// <summary>The Stream labels choices, in display order.</summary>
+    public static IReadOnlyList<LabelModeChoice> LabelModes { get; } =
+    [
+        new(StreamLabelMode.PageTitle, "Page title (also replaces \"Stream N\" labels)"),
+        new(StreamLabelMode.PageTitleNewOnly, "Page title, new streams only"),
+        new(StreamLabelMode.FollowPageTitle, "Keep following the page title"),
+        new(StreamLabelMode.Numbered, "Numbered (Stream 1, Stream 2, ...)"),
+    ];
+
+    [ObservableProperty]
+    private LabelModeChoice _labelMode = LabelModes[0];
+
+    partial void OnLabelModeChanged(LabelModeChoice value)
+    {
+        if (!_applying)
+            _host.Update(c => c with { LabelMode = value.Mode });
+    }
+
     /// <summary>0-100: what a newly sent or pasted stream starts at.</summary>
     [ObservableProperty]
     private decimal _newStreamVolume = ConfigRules.DefaultVolume;
@@ -58,10 +76,17 @@ public sealed partial class SettingsPageViewModel : ObservableObject
         {
             StallTimeoutSeconds = config.Site.StallTimeoutSeconds;
             NewStreamVolume = config.NewStreamVolume;
+            LabelMode = LabelModes.FirstOrDefault(m => m.Mode == config.LabelMode) ?? LabelModes[0];
         }
         finally
         {
             _applying = false;
         }
     }
+}
+
+/// <summary>One Stream labels option for the Settings ComboBox.</summary>
+public sealed record LabelModeChoice(StreamLabelMode Mode, string Text)
+{
+    public override string ToString() => Text;
 }

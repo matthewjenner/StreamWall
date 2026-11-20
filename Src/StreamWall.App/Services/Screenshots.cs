@@ -39,6 +39,10 @@ internal static class Screenshots
 
             foreach (WallWindow wall in walls.OpenWindows)
             {
+                // The window itself shows the strips (the native web views render blank here).
+                string wallShot = string.Create(CultureInfo.InvariantCulture, $"wall{wall.ViewModel.Number}-window.png");
+                SaveRendered(wall, Path.Combine(folder, wallShot));
+                report.Add(wallShot + ": saved");
                 foreach (CellView cell in wall.CellViews)
                 {
                     var data = (CellViewModel)cell.DataContext!;

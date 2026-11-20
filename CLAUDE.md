@@ -70,7 +70,8 @@ Enable the pre-commit scan once per clone: `git config core.hooksPath .githooks`
 ```
 Src/StreamWall.Core/       Pure logic. Now: Config (AppConfig, WallConfig, WallLayout, ConfigRules,
                            ConfigDocument, ConfigRepository + IConfigStore), Diagnostics (DiagLog,
-                           LogRedactor, Pseudonymizer), Presentation (UrlMask, WallMap). Later:
+                           LogRedactor, Pseudonymizer), Presentation (UrlMask, WallMap),
+                           StreamLabels (page-title labels), UpdateService. Later:
                            presets, CellWatchdog, CellDisplay.
                            net10.0, no packages, no P/Invoke (CorePurityConventionTests).
 Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, atomic, sets an
@@ -78,7 +79,8 @@ Src/StreamWall.Platform/   Windows services. Now: DpapiConfigStore (config.dat, 
                            hygiene. SingleInstance and VelopackUpdater are in.
 Src/StreamWall.App/        Avalonia app -> StreamWall.exe: AppHost (composition root, real or
                            --demo), WallManager + WallWindow + CellView (1-3 walls), the control
-                           panel (MainWindow tabs, BrowserView, PickerWindow, WallMapView),
+                           panel (MainWindow tabs, BrowserView, PickerWindow incl. swap mode,
+                           WallMapView), Icons (standard glyph buttons for the strip),
                            Web/ (WebEnvironment, injected Scripts/, the DemoSite), Screenshots.
                            Later: tray. Program runs Velopack's hooks and the single-instance guard.
 Tests/StreamWall.Core.Tests/     Conventions (ASCII, US English, Core purity, URL allowlist),

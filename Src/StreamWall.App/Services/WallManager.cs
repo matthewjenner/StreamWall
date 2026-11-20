@@ -22,11 +22,18 @@ public sealed class WallManager
     {
         _host = host;
         host.ConfigChanged += Sync;
+        host.ReloadAllRequested += ReloadAll;
         if (host.IsLoaded)
             Sync(host.Config);
     }
 
     public IReadOnlyCollection<WallWindow> OpenWindows => _open.Values;
+
+    /// <summary>Shows the swap picker over a wall (set by the App; tests may fake it).</summary>
+    public Func<WallWindow, CellViewModel, Task<CellRef?>>? PickSwapTarget { get; set; }
+
+    /// <summary>Reloads every cell on every open wall, staggered.</summary>
+    public void ReloadAll() => _host.Log.ReloadAll(_open.Values.Sum(w => w.ViewModel.ReloadAll()));
 
     public void Sync(AppConfig config)
     {
@@ -38,9 +45,12 @@ public sealed class WallManager
             bool isOpen = _open.TryGetValue(wall.Id, out WallWindow? window);
             if (wall.IsOpen && !isOpen)
             {
-                var vm = new WallViewModel(_host, wall.Id, NextStartDelay);
+                WallWindow? owner = null;
+                var vm = new WallViewModel(_host, wall.Id, NextStartDelay,
+                    cell => owner is not null && PickSwapTarget is { } pick ? pick(owner, cell) : Task.FromResult<CellRef?>(null));
                 vm.Apply(config);
                 window = new WallWindow(vm, _host.Web, _host.Log);
+                owner = window;
                 Guid id = wall.Id;
                 window.Closed += (_, _) => OnClosedByUser(id);
                 _open[wall.Id] = window;

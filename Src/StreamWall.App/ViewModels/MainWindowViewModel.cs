@@ -27,7 +27,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Version = "v" + AppHost.Version + (host.Dev ? " dev" : "");
         host.UpdateChanged += s => Banner = UpdateBanner.From(s);
         Walls = new WallsPageViewModel(host);
-        Streams = new StreamsPageViewModel(host, SendToWallAsync);
+        Streams = new StreamsPageViewModel(host, (url, what) => SendToWallAsync(url, what));
         Settings = new SettingsPageViewModel(host);
         Browser = new BrowserViewModel(host, SendToWallAsync);
         host.ConfigChanged += Apply;
@@ -80,11 +80,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void ShowTab(ControlPanelTab tab) => SelectedTab = tab;
 
     /// <summary>Picker, then Send to wall. Returns where it went, or null if canceled.</summary>
-    public async Task<CellRef?> SendToWallAsync(string url, string what)
+    public async Task<CellRef?> SendToWallAsync(string url, string what, string? pageTitle = null)
     {
         CellRef? cell = await PickCell(what);
         if (cell is CellRef target)
-            _host.SendToWall(url, target);
+            _host.SendToWall(url, target, pageTitle);
         return cell;
     }
 

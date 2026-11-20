@@ -99,14 +99,25 @@ developer or AI assistant sees while working on the app. The repo is public.
   renameable) so the picker can say where things go. Each wall can be opened,
   closed (its cells stop) or removed; open walls reopen on launch. Resizing a
   grid keeps each stream whose row and column still exist; the rest leave the
-  wall (they stay in the library). Cells can be
-  swapped by dragging their strips.
-- **Cell strip.** A slim strip above or below each cell holds the controls
-  (nothing can be drawn over a native web view): label, status dot
-  (playing / waiting / no video / error), volume, mute, reload, interactive toggle,
-  expand, clear. Double-clicking a strip or a hotkey **expands** a cell to fill
-  its wall; repeat to restore. A global hotkey hides every strip for a clean
-  wall.
+  wall (they stay in the library).
+- **Cell strip.** A slim strip above each cell holds the controls (nothing can
+  be drawn over a native web view): number, label, status dot (playing /
+  waiting / no video / error), then one-click icon buttons with tooltips, using
+  standard Windows icons: mute, a volume slider, **reload**, **swap**, and
+  **clear**. (Planned: open in the Browser, interactive toggle, expand.)
+  Double-clicking a strip or a hotkey **expands** a cell to fill its wall
+  (M4). A global hotkey hides every strip for a clean wall (M4).
+- **Swap.** The strip's swap button opens the picker titled "Swap 'X' with:",
+  with the cell itself marked. One click on any other cell, on any wall,
+  trades the two (no confirm: nothing is lost); an empty cell receives the
+  stream, and "Move to next empty cell" does that in one click. Only the two
+  cells reload. This replaces drag-to-swap, which could not cross walls.
+- **Stream labels (Settings).** By default a stream is named after its page's
+  title when it is sent, and a label still "Stream N" takes its page's title
+  the next time its cell loads. Other choices: page title for new streams
+  only; keep following the page title as it changes; or numbered "Stream N".
+  A label typed in the Streams tab is the user's and is never replaced.
+- **Reload all** on the Walls tab reloads every cell, staggered like startup.
 - **Presets.** Save and restore whole arrangements (walls, grids, cell-to-stream
   mapping, volumes). The last-used preset loads on launch.
 - **Control panel.** Tabs: **Walls** (the 1-3 walls with their grids, add /

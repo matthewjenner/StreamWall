@@ -27,9 +27,11 @@ public sealed class CellView : DockPanel
     private readonly DiagLog _log;
     private readonly TextBlock _label = new() { VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, Foreground = Brushes.Gainsboro };
     private readonly Avalonia.Controls.Shapes.Ellipse _dot = new() { Width = 8, Height = 8, Margin = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center };
-    private readonly ToggleButton _mute = new() { Content = "Mute", Padding = new Thickness(6, 0), Height = 22, FontSize = 11, Name = "MuteButton" };
-    private readonly Slider _volume = new() { Minimum = 0, Maximum = 100, Width = 90, Height = 22, Margin = new Thickness(6, -6, 6, 0), Name = "VolumeSlider" };
-    private readonly Button _clear = new() { Content = "X", Padding = new Thickness(8, 0), Height = 22, FontSize = 11, Name = "ClearButton" };
+    private readonly ToggleButton _mute = Icons.Toggle(Icons.Volume, "Mute", "MuteButton");
+    private readonly Slider _volume = new() { Minimum = 0, Maximum = 100, Width = 80, Margin = new Thickness(4, -8, 4, -8), VerticalAlignment = VerticalAlignment.Center, Name = "VolumeSlider" };
+    private readonly Button _reload = Icons.Button(Icons.Reload, "Reload", "ReloadButton");
+    private readonly Button _swap = Icons.Button(Icons.Swap, "Swap with another cell", "SwapButton");
+    private readonly Button _clear = Icons.Button(Icons.Close, "Clear cell (stays in your library)", "ClearButton");
     private readonly Panel _body = new() { Background = Brushes.Black };
     private readonly TextBlock _placeholder = new()
     {
@@ -61,10 +63,12 @@ public sealed class CellView : DockPanel
         _web = web;
         _log = log;
 
-        var strip = new DockPanel { Height = 26, Background = StripBackground, Margin = new Thickness(0, 0, 0, 1) };
+        var strip = new DockPanel { Height = 28, Background = StripBackground, Margin = new Thickness(0, 0, 0, 1), ClipToBounds = true };
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         right.Children.Add(_mute);
         right.Children.Add(_volume);
+        right.Children.Add(_reload);
+        right.Children.Add(_swap);
         right.Children.Add(_clear);
         DockPanel.SetDock(right, Dock.Right);
         strip.Children.Add(right);
@@ -79,6 +83,8 @@ public sealed class CellView : DockPanel
         _mute.IsCheckedChanged += (_, _) => { if (!_syncing && _vm is not null) _vm.Muted = _mute.IsChecked == true; };
         _volume.ValueChanged += (_, e) => { if (!_syncing && _vm is not null) _vm.Volume = (int)Math.Round(e.NewValue); };
         _clear.Click += (_, _) => _vm?.ClearCommand.Execute(null);
+        _reload.Click += (_, _) => _vm?.ReloadCommand.Execute(null);
+        _swap.Click += (_, _) => _vm?.SwapCommand.Execute(null);
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _audioLog.Tick += (_, _) => LogAudio();
     }
@@ -87,12 +93,27 @@ public sealed class CellView : DockPanel
     {
         base.OnDataContextChanged(e);
         if (_vm is not null)
+        {
             _vm.PropertyChanged -= OnViewModelChanged;
+            _vm.ReloadRequested -= OnReloadRequested;
+        }
         _vm = DataContext as CellViewModel;
         if (_vm is null)
             return;
         _vm.PropertyChanged += OnViewModelChanged;
+        _vm.ReloadRequested += OnReloadRequested;
         SyncStrip();
+    }
+
+    /// <summary>Reload (the strip's button, or Reload all with a stagger delay): a fresh web view.</summary>
+    private void OnReloadRequested(TimeSpan delay)
+    {
+        if (!_started)
+            return;
+        if (delay > TimeSpan.Zero)
+            DispatcherTimer.RunOnce(Recreate, delay);
+        else
+            Recreate();
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -168,9 +189,10 @@ public sealed class CellView : DockPanel
         {
             _label.Text = string.Create(CultureInfo.InvariantCulture, $"{_vm.Number}  {_vm.Label}");
             bool filled = !_vm.IsEmpty;
-            _mute.IsVisible = _volume.IsVisible = _clear.IsVisible = filled;
+            _mute.IsVisible = _volume.IsVisible = _reload.IsVisible = _swap.IsVisible = _clear.IsVisible = filled;
             _mute.IsChecked = _vm.Muted;
-            _mute.Content = _vm.Muted ? "Muted" : "Mute";
+            _mute.Content = _vm.Muted ? Icons.Mute : Icons.Volume;
+            ToolTip.SetTip(_mute, _vm.Muted ? "Unmute" : "Mute");
             _volume.Value = _vm.Volume;
             _dot.Fill = _vm.Status switch
             {
@@ -217,6 +239,8 @@ public sealed class CellView : DockPanel
             core.NewWindowRequested += (_, a) => a.Handled = true;
             core.ProcessFailed += OnProcessFailed;
             core.WebMessageReceived += (_, a) => OnMessage(a.TryGetWebMessageAsString(), top: true);
+            // The page title may become the stream's label (Settings > Stream labels); never logged.
+            core.DocumentTitleChanged += (_, _) => { if (generation == _generation) _vm?.ReportPageTitle(core.DocumentTitle); };
             core.FrameCreated += (_, a) =>
             {
                 CoreWebView2Frame frame = a.Frame;

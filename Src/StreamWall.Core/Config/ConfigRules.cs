@@ -89,6 +89,7 @@ public static class ConfigRules
             Streams = streams,
             MasterVolume = Math.Clamp(config.MasterVolume, 0, 100),
             NewStreamVolume = Math.Clamp(config.NewStreamVolume, 0, 100),
+            LabelMode = Enum.IsDefined(config.LabelMode) ? config.LabelMode : StreamLabelMode.PageTitle,
             PseudonymKey = UsableKey(config.PseudonymKey) ? config.PseudonymKey : Convert.ToBase64String(Pseudonymizer.NewKey()),
         };
     }

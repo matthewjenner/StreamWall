@@ -34,7 +34,12 @@ public sealed partial class App : Application
             }
             AppHost host = AppArgs.Demo ? AppHost.CreateDemo(seed) : AppHost.CreateReal(dev: Program.IsDevCopy);
             _host = host;
-            WallManager walls = new(host);
+            WallManager walls = new(host)
+            {
+                // A cell's Swap button: the picker over that wall, its own cell marked.
+                PickSwapTarget = (wall, cell) =>
+                    new PickerWindow(WallMap.From(host.Config), "\"" + cell.Label + "\"", host.AddWall, cell.Ref).ShowDialog<CellRef?>(wall),
+            };
             _walls = walls;
             var viewModel = new MainWindowViewModel(host);
             var window = new MainWindow

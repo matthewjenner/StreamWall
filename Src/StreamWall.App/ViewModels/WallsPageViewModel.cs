@@ -51,6 +51,10 @@ public sealed partial class WallsPageViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddWall))]
     private void AddWall() => _host.Update(c => WallLayout.AddWall(c).Config);
 
+    /// <summary>Reloads every cell on every open wall, staggered like startup.</summary>
+    [RelayCommand]
+    private void ReloadAll() => _host.ReloadAll();
+
     partial void OnMasterVolumeChanged(int value)
     {
         if (!_applying)

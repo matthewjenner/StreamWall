@@ -110,6 +110,7 @@ public sealed class BrowserView : DockPanel
             _core = core;
             core.NewWindowRequested += (_, a) => { a.Handled = true; core.Navigate(a.Uri); };
             core.SourceChanged += (_, _) => OnSourceChanged(core.Source);
+            core.DocumentTitleChanged += (_, _) => vm.CurrentTitle = core.DocumentTitle;
             core.HistoryChanged += (_, _) =>
             {
                 _back.IsEnabled = core.CanGoBack;

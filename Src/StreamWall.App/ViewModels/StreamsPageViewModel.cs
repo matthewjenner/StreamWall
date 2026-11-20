@@ -141,7 +141,9 @@ public sealed partial class StreamRowViewModel : ObservableObject
     [RelayCommand]
     private Task Send() => _send(_url, "\"" + Label + "\"");
 
-    partial void OnLabelChanged(string value) => Change(s => s with { Label = string.IsNullOrWhiteSpace(value) ? s.Label : value });
+    // Typed by the user: page titles never replace it from now on.
+    partial void OnLabelChanged(string value) =>
+        Change(s => string.IsNullOrWhiteSpace(value) ? s : s with { Label = value.Trim(), LabelEdited = true });
 
     partial void OnVolumeChanged(int value) => Change(s => s with { Volume = value });
 

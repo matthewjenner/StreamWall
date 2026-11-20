@@ -26,6 +26,9 @@ public sealed record AppConfig
     /// <summary>0-100: the volume a newly sent or pasted stream starts at (Settings).</summary>
     public int NewStreamVolume { get; init; } = ConfigRules.DefaultVolume;
 
+    /// <summary>How streams are labeled from page titles (Settings).</summary>
+    public StreamLabelMode LabelMode { get; init; } = StreamLabelMode.PageTitle;
+
     /// <summary>Base64 key for <see cref="Diagnostics.Pseudonymizer"/>; generated on first run.</summary>
     public string PseudonymKey { get; init; } = "";
 
@@ -56,8 +59,11 @@ public sealed record StreamConfig
 {
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    /// <summary>The user's name for it. Shown in the UI; never logged.</summary>
+    /// <summary>The stream's name (page title, "Stream N", or the user's). Shown in the UI; never logged.</summary>
     public string Label { get; init; } = "";
+
+    /// <summary>The user typed the label: page titles never replace it (<see cref="StreamLabels"/>).</summary>
+    public bool LabelEdited { get; init; }
 
     public string Url { get; init; } = "";
 

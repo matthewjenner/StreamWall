@@ -12,18 +12,27 @@ namespace StreamWall.App.ViewModels;
 /// </summary>
 public sealed partial class CellViewModel : ObservableObject
 {
-    private readonly Action<CellViewModel> _clear;
-    private readonly Action<Guid, int> _setVolume;
-    private readonly Action<Guid, bool> _setMuted;
+    private readonly ICellActions _actions;
     private bool _applying;
 
-    public CellViewModel(CellRef cell, int wallNumber, Action<CellViewModel> clear, Action<Guid, int> setVolume, Action<Guid, bool> setMuted)
+    public CellViewModel(CellRef cell, int wallNumber, ICellActions actions)
     {
         Ref = cell;
         WallNumber = wallNumber;
-        _clear = clear;
-        _setVolume = setVolume;
-        _setMuted = setMuted;
+        _actions = actions;
+    }
+
+    /// <summary>Raised to reload the web view now (or after the given delay, for staggered reloads).</summary>
+    public event Action<TimeSpan>? ReloadRequested;
+
+    /// <summary>Reloads this cell's page (the strip's Reload; Reload all staggers with a delay).</summary>
+    public void RequestReload(TimeSpan delay) => ReloadRequested?.Invoke(delay);
+
+    /// <summary>The view reports the page's title; the label may follow it (Settings, <see cref="StreamLabels"/>).</summary>
+    public void ReportPageTitle(string? title)
+    {
+        if (StreamId is Guid id)
+            _actions.PageTitle(id, title);
     }
 
     public CellRef Ref { get; }
@@ -100,7 +109,20 @@ public sealed partial class CellViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Clear() => _clear(this);
+    private void Clear() => _actions.Clear(this);
+
+    [RelayCommand]
+    private void Reload()
+    {
+        if (IsEmpty)
+            return;
+        _actions.Reloaded(this);
+        RequestReload(TimeSpan.Zero);
+    }
+
+    /// <summary>Picks another cell (any wall) and trades places with it.</summary>
+    [RelayCommand]
+    private Task Swap() => IsEmpty ? Task.CompletedTask : _actions.SwapAsync(this);
 
     [RelayCommand]
     private void ToggleMute() => Muted = !Muted;
@@ -108,12 +130,31 @@ public sealed partial class CellViewModel : ObservableObject
     partial void OnVolumeChanged(int value)
     {
         if (!_applying && StreamId is Guid id)
-            _setVolume(id, value);
+            _actions.SetVolume(id, value);
     }
 
     partial void OnMutedChanged(bool value)
     {
         if (!_applying && StreamId is Guid id)
-            _setMuted(id, value);
+            _actions.SetMuted(id, value);
     }
+}
+
+/// <summary>What a cell asks of its wall (implemented by <see cref="WallViewModel"/>).</summary>
+public interface ICellActions
+{
+    void Clear(CellViewModel cell);
+
+    void SetVolume(Guid stream, int volume);
+
+    void SetMuted(Guid stream, bool muted);
+
+    /// <summary>The user asked to reload this cell (logged).</summary>
+    void Reloaded(CellViewModel cell);
+
+    /// <summary>Picks a cell to swap with, then swaps.</summary>
+    Task SwapAsync(CellViewModel cell);
+
+    /// <summary>The cell's page reported its title.</summary>
+    void PageTitle(Guid stream, string? title);
 }

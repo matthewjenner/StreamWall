@@ -48,6 +48,7 @@
                 <StackPanel Spacing="16" DataContext="{Binding Walls}" x:DataType="vm:WallsPageViewModel">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button Name="AddWallButton" Content="Add wall" Classes="accent" Command="{Binding AddWallCommand}" />
+                        <Button Name="ReloadAllButton" Content="Reload all" Command="{Binding ReloadAllCommand}" />
                         <TextBlock Text="Master volume" VerticalAlignment="Center" Margin="12,0,0,0" />
                         <Slider Name="MasterVolumeSlider" Minimum="0" Maximum="100" Width="160" Value="{Binding MasterVolume}" />
                         <CheckBox Name="MasterMuteBox" Content="Mute all" IsChecked="{Binding MasterMuted}" />
@@ -134,6 +135,10 @@
                     <TextBlock Text="Signing in" FontWeight="SemiBold" />
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Sign in to the site in the Browser tab, as in any browser. Every cell shares that session. If it ever expires, sign in there again and the cells recover." />
+                    <TextBlock Text="Stream labels" FontWeight="SemiBold" Margin="0,16,0,0" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="How streams are named on the walls, in the picker and in Streams. A label you type yourself is never replaced." />
+                    <ComboBox Name="LabelModeBox" ItemsSource="{x:Static vm:SettingsPageViewModel.LabelModes}" SelectedItem="{Binding LabelMode}" MinWidth="320" />
                     <TextBlock Text="Volume for new streams (0-100)" FontWeight="SemiBold" Margin="0,16,0,0" />
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Streams you send to a wall start at this volume, so an unexpectedly loud one never blasts. Adjust each on its strip." />

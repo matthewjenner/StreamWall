@@ -16,9 +16,9 @@ namespace StreamWall.App.ViewModels;
 public sealed partial class BrowserViewModel : ObservableObject
 {
     private readonly AppHost _host;
-    private readonly Func<string, string, Task<CellRef?>> _send;
+    private readonly Func<string, string, string?, Task<CellRef?>> _send;
 
-    public BrowserViewModel(AppHost host, Func<string, string, Task<CellRef?>> send)
+    public BrowserViewModel(AppHost host, Func<string, string, string?, Task<CellRef?>> send)
     {
         _host = host;
         _send = send;
@@ -42,6 +42,10 @@ public sealed partial class BrowserViewModel : ObservableObject
 
     [ObservableProperty]
     private string? _message;
+
+    /// <summary>The current page's title (from the view): the default label when it is sent to a wall.</summary>
+    [ObservableProperty]
+    private string? _currentTitle;
 
     public bool CanUseCurrentPage => ConfigRules.IsValidUrl(CurrentUrl);
 
@@ -68,7 +72,7 @@ public sealed partial class BrowserViewModel : ObservableObject
     {
         if (CurrentUrl is not { } url)
             return;
-        CellRef? cell = await _send(url, "this page");
+        CellRef? cell = await _send(url, "this page", CurrentTitle);
         if (cell is CellRef target)
             Message = "Sent to " + WallMap.From(_host.Config).Describe(target) + ".";
     }
