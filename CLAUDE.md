@@ -54,6 +54,7 @@ dotnet run --project Src/StreamWall.App -- --demo   # demo site, memory-only con
 dotnet run --project Src/StreamWall.App -- --demo --screenshot <folder>  # Send to wall, PNGs, quit
 ./Scripts/run.sh [Debug|Release] [app args]     # clean, build, run
 ./Scripts/bump-version.sh [Major|Minor|Patch]   # edits Directory.Build.props only
+./Scripts/gen-icons.sh <art.png>                # regenerate Assets/icon.ico + icon.png (ImageMagick)
 ./Spikes/gen-media.sh                           # the spike's synthetic clip (needs ffmpeg)
 ```
 
@@ -90,7 +91,7 @@ Tests/StreamWall.Core.Tests/     Conventions (ASCII, US English, Core purity, UR
 Tests/StreamWall.Platform.Tests/ Real DPAPI round-trip and quarantine, log file, paths (temp folders).
 Tests/StreamWall.App.Tests/      Headless UI tests on the demo host (UiHarness; not Avalonia.Headless.XUnit).
 Spikes/                    Throwaway proofs, outside the solution and central packages.
-Scripts/                   run, bump-version, pack (gen-icons later).
+Scripts/                   run, bump-version, pack, gen-icons.
 Directory.Build.props      Version + shared Windows TFM.
 Directory.Build.targets    Drops WebView2's WPF/WinForms references (MSB3277).
 Directory.Packages.props   Central package versions (check nuget.org before adding/bumping).
@@ -150,6 +151,10 @@ Directory.Packages.props   Central package versions (check nuget.org before addi
   = false`, so views that would host a web view show nothing and everything
   around them still runs. Check web view behavior with `--demo --screenshot`,
   whose report also verifies zoom per site end to end.
+- **The app icon** is `Src/StreamWall.App/Assets/icon.ico` (exe via `ApplicationIcon`, every
+  window via `AppIcon`, the installer via `vpk --icon`). Regenerate from new artwork with
+  `./Scripts/gen-icons.sh <png>`: it trims and centers edge to edge (no margin: the user wants
+  it as large as its neighbors). `IconConventionTests` requires every size, including 256.
 - **Updates only act in an installed copy** (Velopack `IsInstalled`); dev, demo
   and `artifacts/publish` runs show no update banner. A downloaded update
   installs on quit (or "Restart and install" in the banner).

@@ -262,6 +262,13 @@ With streams configured in the app by the user:
 
 ### Decisions log
 
+- **2026-11-21** - App icon (v0.2.2) from the user's artwork: `Scripts/gen-icons.sh` trims to the
+  visible shape and centers it **edge to edge** (user: a smaller icon than its neighbors is not
+  acceptable; a 90% fill was tried in preview and rejected), clears near-invisible haze, and writes a
+  1024 master plus a 256..16 `.ico` (including 20/24/40 for 125%/150% scaling). Used for the exe,
+  every window, and the Velopack installer and shortcuts. At 16 px the play arrow becomes a dot; a
+  hand-simplified small variant is possible later.
+
 - **2026-11-20** - v0.2.1 from using v0.2.0: a **pin** in the control panel's
   header (and a Settings switch, kept in step) sets `Topmost`, so the panel is
   never lost behind a wall. Settings > Updates: version, status

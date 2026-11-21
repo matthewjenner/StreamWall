@@ -26,6 +26,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Icon = AppIcon.Window;
         Opened += (_, _) => OnOpened();
         PositionChanged += (_, _) => Moved();
         SizeChanged += (_, _) => Moved();

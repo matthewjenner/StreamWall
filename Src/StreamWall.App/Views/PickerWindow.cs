@@ -32,6 +32,7 @@ public sealed class PickerWindow : Window
         _addWall = addWall;
         _swapFrom = swapFrom;
         Title = swapFrom is null ? "Send to wall" : "Swap";
+        Icon = AppIcon.Window;
         SizeToContent = SizeToContent.WidthAndHeight;
         CanResize = false;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;

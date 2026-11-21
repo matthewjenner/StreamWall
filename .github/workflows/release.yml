@@ -90,7 +90,8 @@ jobs:
               --packDir publish \
               --mainExe StreamWall.exe \
               --runtime win-x64 \
-              --packTitle StreamWall
+              --packTitle StreamWall \
+              --icon Src/StreamWall.App/Assets/icon.ico
 
       - name: Create GitHub release
         if: steps.gate.outputs.SKIP == 'false'

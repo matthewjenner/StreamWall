@@ -12,6 +12,7 @@ public sealed class OpenInBrowserDialog : Window
     public OpenInBrowserDialog(string label)
     {
         Title = "Open in Browser";
+        Icon = AppIcon.Window;
         SizeToContent = SizeToContent.WidthAndHeight;
         CanResize = false;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;

@@ -32,6 +32,7 @@ public sealed class WallWindow : Window
         _log = log;
         Background = Brushes.Black;
         WindowStartupLocation = WindowStartupLocation.Manual;
+        Icon = AppIcon.Window;
         ShowActivated = false;
         Title = vm.Title;
 

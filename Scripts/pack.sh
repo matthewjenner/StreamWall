@@ -28,7 +28,8 @@ dotnet publish Src/StreamWall.App/StreamWall.App.csproj --configuration Release 
 
 step "Packing $version"
 vpk pack --packId StreamWall --packVersion "$version" --packDir "$OUT/publish" \
-    --mainExe StreamWall.exe --runtime win-x64 --packTitle StreamWall --outputDir "$OUT/Releases"
+    --mainExe StreamWall.exe --runtime win-x64 --packTitle StreamWall \
+    --icon Src/StreamWall.App/Assets/icon.ico --outputDir "$OUT/Releases"
 
 step "Done: $OUT/Releases"
 ls "$OUT/Releases"

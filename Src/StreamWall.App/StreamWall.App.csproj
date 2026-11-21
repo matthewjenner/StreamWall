@@ -8,11 +8,18 @@
     <RootNamespace>StreamWall.App</RootNamespace>
     <!-- Required: without the supported-OS list, Avalonia cannot host native web views (M1). -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The exe's icon (Explorer, taskbar pins, the installer's shortcut). Scripts/gen-icons.sh makes it. -->
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="StreamWall.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Window icons (title bars, taskbar, Alt+Tab). Assets/icon.png is only the 1024 master for regenerating. -->
+    <AvaloniaResource Include="Assets\icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
